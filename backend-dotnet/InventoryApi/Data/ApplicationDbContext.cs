@@ -23,6 +23,7 @@ namespace InventoryApi.Data
         public DbSet<Sale> Sales => Set<Sale>();
         public DbSet<SaleItem> SaleItems => Set<SaleItem>();
         public DbSet<Prediction> Predictions => Set<Prediction>();
+        public DbSet<TaxConfiguration> TaxConfigurations => Set<TaxConfiguration>();
 
         public DbSet<StockAdjustment> StockAdjustments => Set<StockAdjustment>();
 

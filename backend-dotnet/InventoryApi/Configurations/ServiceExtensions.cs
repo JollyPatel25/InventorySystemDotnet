@@ -47,6 +47,17 @@ namespace InventoryApi.Configurations
             // Prediction Service
             services.AddScoped<IPredictionService, PredictionService>();
 
+            //Organization Service
+            services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            services.AddScoped<IOrganizationService, OrganizationService>();
+
+            // User service
+            services.AddScoped<IUserService, UserService>();
+
+            // Tax Service
+            services.AddScoped<ITaxRepository, TaxRepository>();
+            services.AddScoped<ITaxService, TaxService>();
+
             return services;
         }
     }

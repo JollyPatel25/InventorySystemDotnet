@@ -43,12 +43,15 @@ namespace InventoryApi.Middleware
                 {
                     // Detailed error in Development
                     errors.Add(ex.Message);
+                    errors.Add("An unexpected error occurred.");
                     errors.Add(ex.StackTrace ?? string.Empty);
                 }
                 else
                 {
                     // Safe message in Production
+                    errors.Add(ex.Message);
                     errors.Add("An unexpected error occurred.");
+                    errors.Add(ex.StackTrace ?? string.Empty);
                 }
 
                 var response = ApiResponse<string>.FailureResponse(

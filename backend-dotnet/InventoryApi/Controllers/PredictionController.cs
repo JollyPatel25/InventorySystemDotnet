@@ -19,7 +19,7 @@ public class PredictionController : ControllerBase
     }
 
     [HttpPost("{productId}")]
-    public async Task<IActionResult> Predict(Guid productId, Guid warehouseId)
+    public async Task<IActionResult> Predict(Guid productId, [FromQuery] Guid warehouseId)
     {
         var result = await _service.PredictAsync(productId, warehouseId);
 

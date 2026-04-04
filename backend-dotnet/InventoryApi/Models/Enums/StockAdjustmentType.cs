@@ -9,6 +9,7 @@
         TransferIn = 5,
         TransferOut = 6,
         Sale = 7,
-        Purchase = 8
+        Purchase = 8,
+        Expired = 9
     }
 }

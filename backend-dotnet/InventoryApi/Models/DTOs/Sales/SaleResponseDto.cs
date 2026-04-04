@@ -1,4 +1,6 @@
-﻿namespace InventoryApi.Models.DTOs.Sales;
+﻿using InventoryApi.Models.Enums;
+
+namespace InventoryApi.Models.DTOs.Sales;
 
 public class SaleResponseDto
 {
@@ -11,6 +13,8 @@ public class SaleResponseDto
     public decimal DiscountAmount { get; set; }
 
     public decimal TotalAmount { get; set; }
+
+    public PaymentMethod PaymentMethod { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

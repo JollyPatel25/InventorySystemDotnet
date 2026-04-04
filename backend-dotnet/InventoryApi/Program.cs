@@ -147,6 +147,19 @@ builder.Services.AddHttpClient("AIService", client =>
     client.Timeout = TimeSpan.FromSeconds(5);
 });
 
+
+//--------------------ADD CORS POLICY-------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // -------------------- CONTROLLERS --------------------
 
 builder.Services.AddControllers();
@@ -188,6 +201,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 using (var scope = app.Services.CreateScope())
@@ -228,6 +243,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAngular");
 
 app.UseAuthentication();
 

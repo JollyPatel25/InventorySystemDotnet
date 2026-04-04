@@ -23,6 +23,7 @@ public class SaleRepository : ISaleRepository
     {
         return await _context.Sales
             .Include(s => s.SaleItems)
+                .ThenInclude(i => i.Product)  // ← add this
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -31,6 +32,7 @@ public class SaleRepository : ISaleRepository
         return await _context.Sales
             .Where(s => s.WarehouseId == warehouseId)
             .Include(s => s.SaleItems)
+                .ThenInclude(i => i.Product)  // ← add this
             .ToListAsync();
     }
 

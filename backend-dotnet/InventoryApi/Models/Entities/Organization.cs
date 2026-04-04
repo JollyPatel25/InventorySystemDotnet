@@ -20,4 +20,6 @@ public class Organization : BaseEntity
     public ICollection<UserOrganization> UserOrganizations { get; set; } = new List<UserOrganization>();
     public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
     public ICollection<Product> Products { get; set; } = new List<Product>();
+
+    public ICollection<TaxConfiguration> TaxConfigurations { get; set; } = new List<TaxConfiguration>();
 }

@@ -197,11 +197,16 @@ public class SalesService : ISalesService
         return new SaleResponseDto
         {
             InvoiceNumber = sale.InvoiceNumber,
+            SubTotal = sale.SubTotal,
+            TaxAmount = sale.TaxAmount,
+            DiscountAmount = sale.DiscountAmount,
             TotalAmount = sale.TotalAmount,
+            PaymentMethod = sale.PaymentMethod,   // ← add
             CreatedAt = sale.CreatedAt,
             Items = sale.SaleItems.Select(i => new SaleItemResponseDto
             {
                 ProductId = i.ProductId,
+                ProductName = i.Product?.Name ?? "",  // ← add
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
                 TotalPrice = i.TotalPrice
