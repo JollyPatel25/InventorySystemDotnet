@@ -1,0 +1,106 @@
+########################################
+# GLOBAL (OS + IDE)
+########################################
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vs/
+.vscode/
+
+# JetBrains
+.idea/
+
+# Logs
+*.log
+
+########################################
+# ANGULAR (frontend-angular/)
+########################################
+**/dist/
+frontend-angular/node_modules/
+frontend-angular/dist/
+frontend-angular/build/
+frontend-angular/.angular/
+frontend-angular/coverage/
+frontend-angular/.eslintcache
+frontend-angular/src/environments/environment*.ts
+frontend-angular/*.tsbuildinfo
+frontend-angular/.cache/
+frontend-angular/.turbo/
+
+
+########################################
+# .NET (future backend-dotnet/)
+########################################
+########################################
+# .NET
+########################################
+
+# Build folders (any .NET project inside repo)
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Publish folder
+**/publish/
+
+# Test results
+**/TestResults/
+
+# Environment files
+*.env
+
+backend-dotnet/bin/
+backend-dotnet/obj/
+backend-dotnet/*.user
+backend-dotnet/*.suo
+backend-dotnet/*.userosscache
+backend-dotnet/*.sln.docstates
+backend-dotnet/publish/
+backend-dotnet/wwwroot/
+backend-dotnet/TestResults/
+backend-dotnet/*.env
+
+
+########################################
+# PYTHON (future ai-service-python/)
+########################################
+
+ai-service-python/__pycache__/
+ai-service-python/*.py[cod]
+ai-service-python/*.pyo
+ai-service-python/*.pyd
+ai-service-python/.pytest_cache/
+ai-service-python/.venv/
+ai-service-python/venv/
+ai-service-python/env/
+ai-service-python/.env
+
+########################################
+# DATABASE
+########################################
+
+*.sqlite
+*.db
+
+########################################
+# TEST & COVERAGE
+########################################
+
+coverage/
+.coverage
+htmlcov/
+
+########################################
+# NODE PACKAGE LOCK (optional decision)
+########################################
+# Keep this if frontend is independent
+# frontend-angular/package-lock.json
