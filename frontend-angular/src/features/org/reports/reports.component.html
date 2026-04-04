@@ -1,0 +1,95 @@
+<app-page-header
+  title="Reports"
+  subtitle="Analytics and insights for your organization"
+/>
+
+<!-- Dashboard Summary Cards -->
+<div class="stat-cards" *ngIf="!dashboardLoading && dashboard">
+  <app-stat-card
+    label="Total Products"
+    [value]="dashboard.totalProducts"
+    icon="inventory_2"
+    color="primary"
+  />
+  <app-stat-card
+    label="Total Warehouses"
+    [value]="dashboard.totalWarehouses"
+    icon="warehouse"
+    color="primary"
+  />
+  <app-stat-card
+    label="Low Stock Items"
+    [value]="dashboard.lowStockCount"
+    icon="warning"
+    color="warning"
+  />
+  <app-stat-card
+    label="Sales Today"
+    [value]="dashboard.salesToday"
+    icon="point_of_sale"
+    color="success"
+  />
+  <app-stat-card
+    label="Revenue Today"
+    [value]="(dashboard.revenueToday | currency) ?? ''"
+    icon="payments"
+    color="success"
+  />
+</div>
+
+<div class="cards-loading" *ngIf="dashboardLoading">
+  <mat-spinner diameter="32" />
+</div>
+
+<!-- Tabs -->
+<mat-tab-group
+  animationDuration="200ms"
+  class="reports-tabs"
+  (selectedIndexChange)="onTabChange($event)"
+>
+
+  <!-- Monthly Revenue -->
+  <mat-tab label="Monthly Revenue">
+    <div class="tab-content">
+      <div class="chart-loading" *ngIf="revenueLoading">
+        <mat-spinner diameter="32" />
+      </div>
+      <div class="chart-empty" *ngIf="!revenueLoading && !monthlyRevenue.length">
+        <mat-icon>bar_chart</mat-icon>
+        <p>No revenue data available</p>
+      </div>
+      <div class="chart-container" *ngIf="!revenueLoading && monthlyRevenue.length">
+        <canvas #revenueCanvas></canvas>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Top Products -->
+  <mat-tab label="Top Products">
+    <div class="tab-content">
+      <div class="chart-loading" *ngIf="topProductsLoading">
+        <mat-spinner diameter="32" />
+      </div>
+      <div class="chart-empty" *ngIf="!topProductsLoading && !topProducts.length">
+        <mat-icon>leaderboard</mat-icon>
+        <p>No product data available</p>
+      </div>
+      <div class="chart-container" *ngIf="!topProductsLoading && topProducts.length">
+        <canvas #topProductsCanvas></canvas>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Sales Today -->
+  <mat-tab label="Sales Today">
+    <div class="tab-content">
+      <app-data-table
+        [columns]="salesTodayColumns"
+        [data]="salesToday"
+        [loading]="salesTodayLoading"
+        searchPlaceholder="Search by invoice..."
+      />
+    </div>
+  </mat-tab>
+
+</mat-tab-group>

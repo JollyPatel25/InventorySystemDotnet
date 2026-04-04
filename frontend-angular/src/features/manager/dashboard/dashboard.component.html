@@ -1,0 +1,11 @@
+<app-page-header title="Dashboard" subtitle="Your assigned warehouses overview" />
+
+<div class="stats-grid" *ngIf="!loading && dashboard">
+  <app-stat-card label="Low Stock Items" [value]="dashboard.lowStockCount" icon="warning" color="warning" />
+  <app-stat-card label="Sales Today" [value]="dashboard.salesToday" icon="point_of_sale" color="primary" />
+  <app-stat-card label="Revenue Today" [value]="(dashboard.revenueToday | currency) ?? ''" icon="attach_money" color="success" />
+</div>
+
+<div class="stats-grid" *ngIf="loading">
+  <div class="skeleton-card" *ngFor="let i of [1,2,3]"></div>
+</div>

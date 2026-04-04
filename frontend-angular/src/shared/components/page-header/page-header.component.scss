@@ -1,0 +1,21 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header-text {
+  .title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface);
+  }
+
+  .subtitle {
+    margin: 4px 0 0;
+    font-size: 0.875rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

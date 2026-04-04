@@ -1,0 +1,22 @@
+<app-page-header title="Inventory" subtitle="View-only access" />
+
+<div class="warehouse-selector">
+  <mat-form-field appearance="outline">
+    <mat-label>Select Warehouse</mat-label>
+    <mat-select [(ngModel)]="selectedWarehouseId" (ngModelChange)="onWarehouseChange()">
+      <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<app-data-table
+  *ngIf="selectedWarehouseId"
+  [columns]="columns"
+  [data]="inventory"
+  [loading]="loading"
+  searchPlaceholder="Search inventory..."
+/>
+
+<div class="empty-state" *ngIf="!selectedWarehouseId">
+  <p>Select a warehouse to view inventory.</p>
+</div>

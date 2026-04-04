@@ -1,0 +1,20 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <div class="sidebar-logo">
+    <mat-icon class="logo-icon">inventory</mat-icon>
+    <span class="logo-text" *ngIf="!collapsed">InventoryPro</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a
+      *ngFor="let item of navItems"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      class="nav-item"
+      [matTooltip]="collapsed ? item.label : ''"
+      matTooltipPosition="right"
+    >
+      <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+      <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+    </a>
+  </nav>
+</aside>

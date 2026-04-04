@@ -1,0 +1,39 @@
+<app-page-header
+  title="Inventory"
+  subtitle="Manage stock levels across your warehouses"
+  [buttonLabel]="selectedWarehouseId && !isViewer ? 'Initialize Product' : ''"
+  buttonIcon="add"
+  (buttonClick)="openInitializeDialog()"
+/>
+
+<div class="warehouse-selector">
+  <mat-form-field appearance="outline" class="warehouse-field">
+    <mat-label>Select Warehouse</mat-label>
+    <mat-select
+      [(ngModel)]="selectedWarehouseId"
+      (ngModelChange)="onWarehouseChange()"
+    >
+      <mat-option *ngFor="let wh of warehouses" [value]="wh.id">
+        {{ wh.name }} <span class="wh-code">({{ wh.code }})</span>
+      </mat-option>
+    </mat-select>
+    <mat-icon matPrefix>warehouse</mat-icon>
+  </mat-form-field>
+</div>
+
+<ng-container *ngIf="!selectedWarehouseId">
+  <div class="empty-state">
+    <mat-icon>warehouse</mat-icon>
+    <p>Select a warehouse to view inventory</p>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="selectedWarehouseId">
+  <app-data-table
+    [columns]="columns"
+    [data]="inventory"
+    [loading]="loading"
+    searchPlaceholder="Search by product or SKU..."
+    (actionClick)="onAction($event)"
+  />
+</ng-container>

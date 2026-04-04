@@ -1,0 +1,25 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+
+  .full-width { grid-column: 1 / -1; }
+  mat-form-field { width: 100%; }
+}
+
+.section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 8px 0 4px;
+}
+
+.error-msg {
+  color: var(--mat-sys-error);
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+mat-dialog-content { min-width: 520px; padding-top: 8px !important; }

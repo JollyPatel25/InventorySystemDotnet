@@ -1,0 +1,15 @@
+<div class="success-container">
+  <div class="success-icon">
+    <mat-icon>check_circle</mat-icon>
+  </div>
+  <h2>Sale Created!</h2>
+  <p class="invoice-label">Invoice Number</p>
+  <div class="invoice-number">{{ data.invoiceNumber }}</div>
+  <p class="sub-text">The sale has been recorded and inventory updated.</p>
+</div>
+
+<mat-dialog-actions align="center">
+  <button mat-raised-button color="primary" (click)="dialogRef.close()">
+    Done
+  </button>
+</mat-dialog-actions>

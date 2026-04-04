@@ -1,0 +1,21 @@
+<app-page-header
+  title="Platform Dashboard"
+  subtitle="Manage all organizations"
+  buttonLabel="Create Organization"
+  buttonIcon="add"
+  (buttonClick)="openCreateOrg()"
+/>
+
+<div class="stats-grid">
+  <app-stat-card label="Total Organizations" [value]="orgs.length" icon="business" color="primary" />
+  <app-stat-card label="Active" [value]="activeCount" icon="check_circle" color="success" />
+  <app-stat-card label="Inactive" [value]="inactiveCount" icon="block" color="danger" />
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [data]="orgs"
+  [loading]="loading"
+  searchPlaceholder="Search organizations..."
+  (actionClick)="onAction($event)"
+/>

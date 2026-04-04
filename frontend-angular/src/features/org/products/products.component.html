@@ -1,0 +1,15 @@
+<app-page-header
+  title="Products"
+  subtitle="Manage your product catalog"
+  buttonLabel="Add Product"
+  buttonIcon="add"
+  (buttonClick)="openCreateDialog()"
+/>
+
+<app-data-table
+  [columns]="columns"
+  [data]="products"
+  [loading]="loading"
+  searchPlaceholder="Search by name or SKU..."
+  (actionClick)="onAction($event)"
+/>

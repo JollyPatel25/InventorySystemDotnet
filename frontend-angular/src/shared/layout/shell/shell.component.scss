@@ -1,0 +1,25 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.shell-wrapper {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: margin-left 0.3s ease;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: var(--mat-sys-surface-variant);
+}

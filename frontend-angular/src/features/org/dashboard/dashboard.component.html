@@ -1,0 +1,51 @@
+<app-page-header title="Dashboard" subtitle="Overview of your organization" />
+
+<!-- Stat Cards -->
+<div class="stats-grid" *ngIf="!loading && dashboard">
+  <app-stat-card
+    label="Total Products"
+    [value]="dashboard.totalProducts"
+    icon="inventory_2"
+    color="primary"
+  />
+  <app-stat-card
+    label="Total Warehouses"
+    [value]="dashboard.totalWarehouses"
+    icon="warehouse"
+    color="success"
+  />
+  <app-stat-card
+    label="Low Stock Items"
+    [value]="dashboard.lowStockCount"
+    icon="warning"
+    color="warning"
+  />
+  <app-stat-card
+    label="Sales Today"
+    [value]="dashboard.salesToday"
+    icon="point_of_sale"
+    color="primary"
+  />
+  <app-stat-card
+    label="Revenue Today"
+    [value]="(dashboard.revenueToday | currency) ?? ''"
+    icon="attach_money"
+    color="success"
+  />
+</div>
+
+<!-- Loading skeleton -->
+<div class="stats-grid" *ngIf="loading">
+  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5]"></div>
+</div>
+
+<!-- Sales Today Table -->
+<div class="section">
+  <h3 class="section-title">Today's Sales</h3>
+  <app-data-table
+    [columns]="salesTodayColumns"
+    [data]="salesToday"
+    [loading]="salesLoading"
+    searchPlaceholder="Search invoices..."
+  />
+</div>

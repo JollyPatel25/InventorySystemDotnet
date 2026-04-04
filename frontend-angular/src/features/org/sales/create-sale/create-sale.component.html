@@ -1,0 +1,165 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-left">
+      <button mat-icon-button (click)="cancel()" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>New Sale</h1>
+        <p>Create a new sales transaction</p>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="sale-form">
+
+    <!-- Warehouse + Payment -->
+    <div class="form-section">
+      <h3 class="section-title">Transaction Info</h3>
+      <div class="form-row">
+
+        <mat-form-field appearance="outline">
+          <mat-label>Warehouse</mat-label>
+          <mat-select formControlName="warehouseId">
+            <mat-option *ngFor="let wh of warehouses" [value]="wh.id">
+              {{ wh.name }} ({{ wh.code }})
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>warehouse</mat-icon>
+          <mat-error *ngIf="form.get('warehouseId')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Method</mat-label>
+          <mat-select formControlName="paymentMethod">
+            <mat-option *ngFor="let pm of paymentMethods" [value]="pm">{{ pm }}</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>payments</mat-icon>
+          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <!-- Products -->
+    <div class="form-section">
+      <div class="section-header">
+        <h3 class="section-title">Products</h3>
+        <button mat-stroked-button type="button" (click)="addItem()">
+          <mat-icon>add</mat-icon> Add Product
+        </button>
+      </div>
+
+      <div class="items-header">
+        <span>Product</span>
+        <span>Unit Price</span>
+        <span>Quantity</span>
+        <span>Subtotal</span>
+        <span></span>
+      </div>
+
+      <div formArrayName="items">
+        <div
+          *ngFor="let item of items.controls; let i = index"
+          [formGroupName]="i"
+          class="item-row"
+        >
+
+          <mat-form-field appearance="outline">
+            <mat-label>Product</mat-label>
+            <mat-select formControlName="productId">
+              <mat-option *ngFor="let p of getAvailableProducts(i)" [value]="p.id">
+                {{ p.name }} — {{ p.sku }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="asFormGroup(item).get('productId')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+
+          <div class="unit-price">
+            {{ getProductPrice(asFormGroup(item).get('productId')?.value) | currency }}
+          </div>
+
+          <mat-form-field appearance="outline" class="qty-field">
+            <mat-label>Qty</mat-label>
+            <input matInput type="number" formControlName="quantity" />
+            <mat-error *ngIf="asFormGroup(item).get('quantity')?.hasError('min')">Min 1</mat-error>
+          </mat-form-field>
+
+          <div class="item-subtotal">
+            {{ getItemSubtotal(i) | currency }}
+          </div>
+
+          <button
+            mat-icon-button
+            type="button"
+            color="warn"
+            [disabled]="items.length === 1"
+            (click)="removeItem(i)"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <!-- Totals + Tax/Discount -->
+    <div class="form-section totals-section">
+
+      <div class="adjustments">
+        <mat-form-field appearance="outline">
+          <mat-label>Tax Amount</mat-label>
+          <input matInput type="number" formControlName="taxAmount" />
+          <span matTextPrefix>$&nbsp;</span>
+          <mat-error *ngIf="form.get('taxAmount')?.hasError('min')">Must be >= 0</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Discount Amount</mat-label>
+          <input matInput type="number" formControlName="discountAmount" />
+          <span matTextPrefix>$&nbsp;</span>
+          <mat-error *ngIf="form.get('discountAmount')?.hasError('min')">Must be >= 0</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="totals-summary">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>{{ subTotal | currency }}</span>
+        </div>
+        <div class="total-row">
+          <span>Tax</span>
+          <span>+ {{ form.get('taxAmount')?.value | currency }}</span>
+        </div>
+        <div class="total-row">
+          <span>Discount</span>
+          <span>- {{ form.get('discountAmount')?.value | currency }}</span>
+        </div>
+        <mat-divider />
+        <div class="total-row grand">
+          <span>Grand Total</span>
+          <span>{{ grandTotal | currency }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-raised-button color="primary" type="button" (click)="onSubmit()" [disabled]="loading">
+        <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
+        <span *ngIf="!loading">Create Sale</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>

@@ -1,0 +1,10 @@
+<div class="shell-wrapper" [class.sidebar-collapsed]="!sidebarOpen">
+  <app-sidebar [collapsed]="!sidebarOpen" />
+
+  <div class="main-area">
+    <app-topbar (toggleSidebar)="toggleSidebar()" />
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

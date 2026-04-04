@@ -1,0 +1,15 @@
+<div class="page-header">
+  <div class="header-text">
+    <h2 class="title">{{ title }}</h2>
+    <p class="subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+  </div>
+  <button
+    *ngIf="buttonLabel"
+    mat-raised-button
+    color="primary"
+    (click)="buttonClick.emit()"
+  >
+    <mat-icon *ngIf="buttonIcon">{{ buttonIcon }}</mat-icon>
+    {{ buttonLabel }}
+  </button>
+</div>

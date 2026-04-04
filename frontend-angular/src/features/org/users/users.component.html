@@ -1,0 +1,15 @@
+<app-page-header
+  title="Users"
+  subtitle="Manage organization users and warehouse access"
+  buttonLabel="Add User"
+  buttonIcon="add"
+  (buttonClick)="openCreateUser()"
+/>
+
+<app-data-table
+  [columns]="columns"
+  [data]="users"
+  [loading]="loading"
+  searchPlaceholder="Search users..."
+  (actionClick)="onAction($event)"
+/>

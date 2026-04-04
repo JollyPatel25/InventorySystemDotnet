@@ -1,0 +1,80 @@
+<app-page-header title="Organization Profile" subtitle="View and manage your organization details" />
+
+<div class="profile-layout" *ngIf="!loading && org">
+
+  <!-- Info Card -->
+  <mat-card class="info-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>domain</mat-icon>
+      <mat-card-title>{{ org.name }}</mat-card-title>
+      <mat-card-subtitle>
+        <app-status-badge [active]="org.isActive" />
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Contact Email</span>
+          <span class="info-value">{{ org.contactEmail }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Contact Phone</span>
+          <span class="info-value">{{ org.contactPhone }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-stroked-button color="primary" (click)="toggleEdit()">
+        <mat-icon>{{ editMode ? 'close' : 'edit' }}</mat-icon>
+        {{ editMode ? 'Cancel' : 'Edit' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Edit Form Card -->
+  <mat-card class="edit-card" *ngIf="editMode">
+    <mat-card-header>
+      <mat-card-title>Edit Details</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" class="form-grid">
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Organization Name</mat-label>
+          <input matInput formControlName="name" />
+          <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contact Email</mat-label>
+          <input matInput formControlName="contactEmail" type="email" />
+          <mat-error *ngIf="form.get('contactEmail')?.hasError('required')">Required</mat-error>
+          <mat-error *ngIf="form.get('contactEmail')?.hasError('email')">Invalid email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contact Phone</mat-label>
+          <input matInput formControlName="contactPhone" />
+          <mat-error *ngIf="form.get('contactPhone')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving">
+        <mat-spinner diameter="18" *ngIf="saving"></mat-spinner>
+        <span *ngIf="!saving">Save Changes</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+</div>
+
+<!-- Loading -->
+<div class="loading-wrap" *ngIf="loading">
+  <mat-spinner diameter="40" />
+</div>

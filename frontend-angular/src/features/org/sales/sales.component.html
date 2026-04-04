@@ -1,0 +1,39 @@
+<app-page-header
+  title="Sales"
+  subtitle="View and manage sales transactions"
+  [buttonLabel]="!isViewer ? 'New Sale' : ''"
+  buttonIcon="add"
+  (buttonClick)="navigateToCreate()"
+/>
+
+<div class="warehouse-selector">
+  <mat-form-field appearance="outline" class="warehouse-field">
+    <mat-label>Filter by Warehouse</mat-label>
+    <mat-select
+      [(ngModel)]="selectedWarehouseId"
+      (ngModelChange)="onWarehouseChange()"
+    >
+      <mat-option *ngFor="let wh of warehouses" [value]="wh.id">
+        {{ wh.name }} ({{ wh.code }})
+      </mat-option>
+    </mat-select>
+    <mat-icon matPrefix>warehouse</mat-icon>
+  </mat-form-field>
+</div>
+
+<ng-container *ngIf="!selectedWarehouseId">
+  <div class="empty-state">
+    <mat-icon>point_of_sale</mat-icon>
+    <p>Select a warehouse to view sales</p>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="selectedWarehouseId">
+  <app-data-table
+    [columns]="columns"
+    [data]="sales"
+    [loading]="loading"
+    searchPlaceholder="Search by invoice number..."
+    (actionClick)="onAction($event)"
+  />
+</ng-container>

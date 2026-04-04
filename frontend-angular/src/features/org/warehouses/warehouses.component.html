@@ -1,0 +1,15 @@
+<app-page-header
+  title="Warehouses"
+  subtitle="Manage your warehouses"
+  buttonLabel="Add Warehouse"
+  buttonIcon="add"
+  (buttonClick)="openCreate()"
+/>
+
+<app-data-table
+  [columns]="columns"
+  [data]="warehouses"
+  [loading]="loading"
+  searchPlaceholder="Search warehouses..."
+  (actionClick)="onAction($event)"
+/>

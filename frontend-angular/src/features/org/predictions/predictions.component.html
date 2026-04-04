@@ -1,0 +1,92 @@
+<app-page-header
+  title="AI Predictions"
+  subtitle="Predict future stock demand using sales history"
+/>
+
+<div class="predictions-layout">
+
+  <!-- Form Card -->
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>auto_graph</mat-icon>
+      <mat-card-title>Run Prediction</mat-card-title>
+      <mat-card-subtitle>Select a product and warehouse to forecast demand</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" class="form-col">
+
+        <mat-form-field appearance="outline">
+          <mat-label>Product</mat-label>
+          <mat-select formControlName="productId">
+            <mat-option *ngFor="let p of products" [value]="p.id">
+              {{ p.name }} ({{ p.sku }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('productId')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Warehouse</mat-label>
+          <mat-select formControlName="warehouseId">
+            <mat-option *ngFor="let w of warehouses" [value]="w.id">
+              {{ w.name }} ({{ w.code }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('warehouseId')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onPredict()"
+          [disabled]="loading || form.invalid"
+          class="predict-btn"
+        >
+          <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
+          <mat-icon *ngIf="!loading">insights</mat-icon>
+          <span>{{ loading ? 'Predicting...' : 'Run Prediction' }}</span>
+        </button>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Result Card -->
+  <mat-card class="result-card" *ngIf="result">
+    <mat-card-header>
+      <mat-icon mat-card-avatar style="color: #1976d2">check_circle</mat-icon>
+      <mat-card-title>Prediction Result</mat-card-title>
+      <mat-card-subtitle>For tomorrow's demand forecast</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="result-content">
+
+      <div class="result-stat">
+        <span class="result-label">Predicted Quantity</span>
+        <span class="result-value primary">{{ result.predictedQuantity }}</span>
+        <span class="result-unit">units</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="result-stat">
+        <span class="result-label">Confidence Score</span>
+        <span class="result-value" [style.color]="confidenceColor">
+          {{ confidencePercent }}%
+        </span>
+        <div class="confidence-bar">
+          <div
+            class="confidence-fill"
+            [style.width.%]="confidencePercent"
+            [style.background]="confidenceColor"
+          ></div>
+        </div>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+
+</div>
