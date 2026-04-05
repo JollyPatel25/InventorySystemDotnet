@@ -120,19 +120,19 @@ export class PredictionsComponent implements OnInit {
     return 'Low';
   }
 
-  get confidenceColor(): string {
-    const p = this.confidencePercent;
-    if (p >= 75) return '#00c853';
-    if (p >= 50) return '#ffab00';
-    return '#ff1744';
-  }
+ get confidenceColor(): string {
+  const p = this.confidencePercent;
+  if (p >= 75) return '#0ea5a4';   // teal instead of green
+  if (p >= 50) return '#f59e0b';   // amber
+  return '#ef4444';                // soft red
+}
 
-  get confidenceTrackColor(): string {
-    const p = this.confidencePercent;
-    if (p >= 75) return 'rgba(0,200,83,0.15)';
-    if (p >= 50) return 'rgba(255,171,0,0.15)';
-    return 'rgba(255,23,68,0.15)';
-  }
+get confidenceTrackColor(): string {
+  const p = this.confidencePercent;
+  if (p >= 75) return 'rgba(14,165,164,0.15)';
+  if (p >= 50) return 'rgba(245,158,11,0.15)';
+  return 'rgba(239,68,68,0.15)';
+}
 
   get circumference(): number {
     return 2 * Math.PI * 44;

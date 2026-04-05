@@ -1,3 +1,17 @@
+:root {
+  --pred-primary: #0ea5a4;        // teal (matches your UI)
+  --pred-primary-soft: #e6f7f7;
+
+  --pred-success: #10b981;        // soft green
+  --pred-warning: #f59e0b;        // amber
+  --pred-danger: #ef4444;         // soft red (NOT harsh)
+
+  --pred-danger-soft: #fef2f2;
+  --pred-warning-soft: #fffbeb;
+  --pred-success-soft: #ecfdf5;
+}
+
+
 // ── Layout ───────────────────────────────────────────────────────────────────
 .pred-layout {
   display: grid;
@@ -217,27 +231,39 @@
   .trend-icon { font-size: 2rem; width: 2rem; height: 2rem; }
   .trend-label-text { font-size: 1.1rem; font-weight: 700; }
 
-  &.trend-rising  { .trend-icon, .trend-label-text { color: #00c853; } }
-  &.trend-falling { .trend-icon, .trend-label-text { color: #ff1744; } }
-  &.trend-stable  { .trend-icon, .trend-label-text { color: #ffab00; } }
+   &.trend-rising  { 
+    .trend-icon, .trend-label-text { color: var(--pred-primary); } 
+  }
+  &.trend-falling { 
+    .trend-icon, .trend-label-text { color: var(--pred-danger); } 
+  }
+  &.trend-stable  { 
+    .trend-icon, .trend-label-text { color: var(--pred-warning); } 
+  }
 }
 
 // Stockout KPI
 .stockout-kpi {
-  &.stockout-critical {
-    border-color: #ff1744 !important;
-    background: rgba(255,23,68,0.05);
-    .kpi-value { color: #ff1744; }
-    .kpi-unit  { color: #ff1744; opacity: 0.8; }
+   &.stockout-critical {
+    border-color: var(--pred-danger) !important;
+    background: var(--pred-danger-soft);
+    
+    .kpi-value { color: var(--pred-danger); }
+    .kpi-unit  { color: var(--pred-danger); opacity: 0.7; }
   }
+
   &.stockout-warning {
-    border-color: #ffab00 !important;
-    background: rgba(255,171,0,0.05);
-    .kpi-value { color: #ffab00; }
+    border-color: var(--pred-warning) !important;
+    background: var(--pred-warning-soft);
+
+    .kpi-value { color: var(--pred-warning); }
   }
+
   &.stockout-safe {
-    border-color: #00c853 !important;
-    .kpi-value { color: #00c853; }
+    border-color: var(--pred-success) !important;
+    background: var(--pred-success-soft);
+
+    .kpi-value { color: var(--pred-success); }
   }
   &.stockout-none {
     align-items: center;
@@ -245,7 +271,7 @@
       font-size: 2.2rem;
       width: 2.2rem;
       height: 2.2rem;
-      color: #00c853;
+      color: #8e908f;
       margin: 8px 0 4px;
     }
   }
@@ -256,13 +282,12 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: var(--mat-sys-primary-container);
+  background: var(--pred-primary-soft);
   border-radius: 12px;
   padding: 14px 18px;
-  border-left: 4px solid var(--mat-sys-primary);
-
+  border-left: 4px solid var(--pred-primary);
   mat-icon {
-    color: var(--mat-sys-primary);
+    color: var(--pred-primary);
     margin-top: 1px;
     flex-shrink: 0;
   }
@@ -270,7 +295,7 @@
   p {
     margin: 0;
     font-size: 0.9rem;
-    color: var(--mat-sys-on-primary-container);
+    color: #065f5b;
     line-height: 1.5;
   }
 }
@@ -280,17 +305,16 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(255,171,0,0.1);
   border-radius: 12px;
   padding: 14px 18px;
-  border-left: 4px solid #ffab00;
+  background: var(--pred-warning-soft);
+  border-left: 4px solid var(--pred-warning);
 
-  mat-icon { color: #ffab00; flex-shrink: 0; }
-
+    mat-icon { color: var(--pred-warning); }
   p {
     margin: 0;
     font-size: 0.875rem;
-    color: var(--mat-sys-on-surface);
+    color: #92400e;
     line-height: 1.5;
   }
 }
@@ -343,7 +367,11 @@
 
 .bar-fill {
   width: 100%;
-  background: linear-gradient(180deg, var(--mat-sys-primary) 0%, color-mix(in srgb, var(--mat-sys-primary) 60%, transparent) 100%);
+   background: linear-gradient(
+    180deg,
+    var(--pred-primary) 0%,
+    #5eead4 100%
+  );
   border-radius: 6px;
   height: 0;
   animation: grow-bar 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -373,6 +401,7 @@
   gap: 16px;
   background: var(--mat-sys-surface);
   border-radius: 16px;
+  color: var(--pred-primary);
   padding: 18px 24px;
   border: 1px solid var(--mat-sys-outline-variant);
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -407,7 +436,7 @@
   .reorder-qty {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--mat-sys-primary);
+    color: var(--pred-primary);
     white-space: nowrap;
 
     small {
