@@ -3,33 +3,81 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiResponse } from '../models/api-response.models';
-import { UserResponseDto } from '../models/auth.models';
-import { CreateUserWithRoleDto, UserListItemDto, AssignWarehouseDto, UserWarehouseAssignmentResponseDto } from '../models/user.models';
+import { UserOrganizationDto } from '../../shared/layout/topbar/topbar.component';
+
+ 
+export interface PlatformUserListItemDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  contactNumber: string;
+  isActive: boolean;
+  isPlatformAdmin: boolean;
+  organizations: UserOrgRoleDto[];
+  // computed on frontend
+  orgNames?: string;
+  roles?: string;
+}
+
+export interface UserOrgRoleDto {
+  organizationId: string;
+  organizationName: string;
+  role: string;
+  isDefault: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private readonly authBase = `${environment.apiBaseUrl}/auth`;
-  private readonly userBase = `${environment.apiBaseUrl}/users`;
+  private readonly base = `${environment.apiBaseUrl}/users`;
 
   constructor(private http: HttpClient) {}
 
-  createUser(dto: CreateUserWithRoleDto): Observable<ApiResponse<UserResponseDto>> {
-    return this.http.post<ApiResponse<UserResponseDto>>(`${this.authBase}/org/create-user`, dto);
+  getAll(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.base}/getall`);
   }
 
-  getOrgUsers(): Observable<ApiResponse<UserListItemDto[]>> {
-    return this.http.get<ApiResponse<UserListItemDto[]>>(`${this.userBase}/getall`);
+  getWarehouseAssignments(userId: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.base}/${userId}/warehouse-assignments`);
   }
 
-  getUserWarehouseAssignments(userId: string): Observable<ApiResponse<UserWarehouseAssignmentResponseDto[]>> {
-    return this.http.get<ApiResponse<UserWarehouseAssignmentResponseDto[]>>(`${this.userBase}/${userId}/warehouse-assignments`);
-  }
-
-  assignWarehouse(dto: AssignWarehouseDto): Observable<ApiResponse<UserWarehouseAssignmentResponseDto>> {
-    return this.http.post<ApiResponse<UserWarehouseAssignmentResponseDto>>(`${this.userBase}/assign-warehouse`, dto);
+  assignWarehouse(dto: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.base}/assign-warehouse`, dto);
   }
 
   removeWarehouseAssignment(assignmentId: string): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.userBase}/remove-warehouse/${assignmentId}`);
+    return this.http.delete<ApiResponse<null>>(`${this.base}/remove-warehouse/${assignmentId}`);
+  }
+
+  getMyOrganizations(): Observable<ApiResponse<UserOrganizationDto[]>> {
+    return this.http.get<ApiResponse<UserOrganizationDto[]>>(`${this.base}/my-organizations`);
+  }
+
+  // Platform Admin
+  getAllUsers(): Observable<ApiResponse<PlatformUserListItemDto[]>> {
+    return this.http.get<ApiResponse<PlatformUserListItemDto[]>>(`${this.base}/platform/getall`);
+  }
+
+  deactivateUser(userId: string): Observable<ApiResponse<null>> {
+    return this.http.patch<ApiResponse<null>>(`${this.base}/platform/deactivate/${userId}`, {});
+  }
+
+  reactivateUser(userId: string): Observable<ApiResponse<null>> {
+    return this.http.patch<ApiResponse<null>>(`${this.base}/platform/reactivate/${userId}`, {});
+  }
+
+    assignAsOrgAdmin(userId: string, organizationId: string): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.base}/platform/assign-org-admin`, {
+      userId,
+      organizationId
+    });
+  }
+ 
+  getMyProfile(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.base}/me`);
+  }
+ 
+  updateMyProfile(dto: any): Observable<ApiResponse<any>> {
+    return this.http.patch<ApiResponse<any>>(`${this.base}/me`, dto);
   }
 }

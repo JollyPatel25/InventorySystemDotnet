@@ -1,92 +1,195 @@
 <app-page-header
-  title="AI Predictions"
-  subtitle="Predict future stock demand using sales history"
+  title="AI Demand Predictions"
+  subtitle="Forecast future stock demand powered by ensemble ML models"
 />
 
-<div class="predictions-layout">
+<div class="pred-layout">
 
-  <!-- Form Card -->
+  <!-- ── Left: Form ─────────────────────────────────────────────────────── -->
   <mat-card class="form-card">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>auto_graph</mat-icon>
-      <mat-card-title>Run Prediction</mat-card-title>
-      <mat-card-subtitle>Select a product and warehouse to forecast demand</mat-card-subtitle>
-    </mat-card-header>
-
     <mat-card-content>
-      <form [formGroup]="form" class="form-col">
+      <div class="form-header">
+        <div class="form-icon-wrap">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <div>
+          <h3 class="form-title">Configure Forecast</h3>
+          <p class="form-sub">Select product &amp; warehouse to run prediction</p>
+        </div>
+      </div>
 
-        <mat-form-field appearance="outline">
+      <form [formGroup]="form" class="form-fields">
+        <mat-form-field appearance="outline" class="w-full">
           <mat-label>Product</mat-label>
           <mat-select formControlName="productId">
             <mat-option *ngFor="let p of products" [value]="p.id">
-              {{ p.name }} ({{ p.sku }})
+              {{ p.name }} <span class="sku-tag">{{ p.sku }}</span>
             </mat-option>
           </mat-select>
+          <mat-icon matPrefix>inventory_2</mat-icon>
           <mat-error *ngIf="form.get('productId')?.hasError('required')">Required</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="w-full">
           <mat-label>Warehouse</mat-label>
           <mat-select formControlName="warehouseId">
             <mat-option *ngFor="let w of warehouses" [value]="w.id">
-              {{ w.name }} ({{ w.code }})
+              {{ w.name }} &mdash; {{ w.code }}
             </mat-option>
           </mat-select>
+          <mat-icon matPrefix>warehouse</mat-icon>
           <mat-error *ngIf="form.get('warehouseId')?.hasError('required')">Required</mat-error>
         </mat-form-field>
 
-        <p class="error-msg" *ngIf="error">{{ error }}</p>
+        <p class="error-banner" *ngIf="error">
+          <mat-icon>error_outline</mat-icon> {{ error }}
+        </p>
 
         <button
-          mat-raised-button
+          mat-flat-button
           color="primary"
           (click)="onPredict()"
           [disabled]="loading || form.invalid"
           class="predict-btn"
         >
-          <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
+          <mat-spinner diameter="18" *ngIf="loading" class="btn-spinner"></mat-spinner>
           <mat-icon *ngIf="!loading">insights</mat-icon>
-          <span>{{ loading ? 'Predicting...' : 'Run Prediction' }}</span>
+          {{ loading ? 'Analysing...' : 'Run AI Forecast' }}
         </button>
-
       </form>
+
+      <!-- Model badge -->
+      <div class="model-badge" *ngIf="result">
+        <mat-icon>memory</mat-icon>
+        <span>{{ result.modelUsed }}</span>
+      </div>
     </mat-card-content>
   </mat-card>
 
-  <!-- Result Card -->
-  <mat-card class="result-card" *ngIf="result">
-    <mat-card-header>
-      <mat-icon mat-card-avatar style="color: #1976d2">check_circle</mat-icon>
-      <mat-card-title>Prediction Result</mat-card-title>
-      <mat-card-subtitle>For tomorrow's demand forecast</mat-card-subtitle>
-    </mat-card-header>
+  <!-- ── Right: Results ─────────────────────────────────────────────────── -->
+  <div class="results-col" *ngIf="result">
 
-    <mat-card-content class="result-content">
+    <!-- Row 1: KPI cards -->
+    <div class="kpi-row">
 
-      <div class="result-stat">
-        <span class="result-label">Predicted Quantity</span>
-        <span class="result-value primary">{{ result.predictedQuantity }}</span>
-        <span class="result-unit">units</span>
+      <!-- Predicted Qty -->
+      <div class="kpi-card primary-kpi">
+        <span class="kpi-label">Tomorrow's Forecast</span>
+        <span class="kpi-value">{{ result.predictedQuantity | number:'1.0-0' }}</span>
+        <span class="kpi-unit">units</span>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="result-stat">
-        <span class="result-label">Confidence Score</span>
-        <span class="result-value" [style.color]="confidenceColor">
-          {{ confidencePercent }}%
-        </span>
-        <div class="confidence-bar">
-          <div
-            class="confidence-fill"
-            [style.width.%]="confidencePercent"
-            [style.background]="confidenceColor"
-          ></div>
+      <!-- Confidence Ring -->
+      <div class="kpi-card confidence-kpi">
+        <span class="kpi-label">Confidence</span>
+        <div class="ring-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle
+              cx="50" cy="50" r="44"
+              fill="none"
+              [attr.stroke]="confidenceTrackColor"
+              stroke-width="8"/>
+            <circle
+              cx="50" cy="50" r="44"
+              fill="none"
+              [attr.stroke]="confidenceColor"
+              stroke-width="8"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="circumference"
+              [attr.stroke-dashoffset]="dashOffset"
+              transform="rotate(-90 50 50)"
+              class="ring-arc"/>
+          </svg>
+          <div class="ring-label">
+            <span class="ring-pct" [style.color]="confidenceColor">{{ confidencePercent }}%</span>
+            <span class="ring-sub">{{ confidenceLabel }}</span>
+          </div>
         </div>
       </div>
 
-    </mat-card-content>
-  </mat-card>
+      <!-- Trend -->
+      <div class="kpi-card trend-kpi" [ngClass]="trendClass">
+        <span class="kpi-label">Demand Trend</span>
+        <div class="trend-body">
+          <mat-icon class="trend-icon">{{ trendIcon }}</mat-icon>
+          <span class="trend-label-text">{{ trendLabel }}</span>
+        </div>
+        <span class="kpi-unit">vs historical average</span>
+      </div>
+
+      <!-- Stockout Risk -->
+      <ng-container *ngIf="result.stockoutRiskDays !== null; else noStockout">
+        <div class="kpi-card stockout-kpi" [ngClass]="stockoutUrgencyClass">
+          <span class="kpi-label">Stockout Risk</span>
+          <span class="kpi-value">{{ result.stockoutRiskDays }}</span>
+          <span class="kpi-unit">days remaining</span>
+        </div>
+      </ng-container>
+      <ng-template #noStockout>
+        <div class="kpi-card stockout-kpi stockout-none">
+          <span class="kpi-label">Stockout Risk</span>
+          <mat-icon class="safe-icon">verified</mat-icon>
+          <span class="kpi-unit">No risk detected</span>
+        </div>
+      </ng-template>
+
+    </div>
+
+    <!-- Row 2: Insight banner -->
+    <div class="insight-banner">
+      <mat-icon>lightbulb</mat-icon>
+      <p>{{ result.insightMessage }}</p>
+    </div>
+
+    <!-- Row 3: Anomaly warning -->
+    <div class="anomaly-banner" *ngIf="result.anomalyDetected">
+      <mat-icon>warning_amber</mat-icon>
+      <p>{{ result.anomalyDescription }}</p>
+    </div>
+
+    <!-- Row 4: 7-Day Forecast Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>bar_chart</mat-icon>
+        <mat-card-title>7-Day Demand Forecast</mat-card-title>
+        <mat-card-subtitle>Predicted units per day</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="bar-chart">
+          <div class="bar-col" *ngFor="let bar of chartBars; let i = index">
+            <span class="bar-qty">{{ bar.qty | number:'1.0-1' }}</span>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                [style.height.%]="bar.height"
+                [style.animationDelay]="i * 60 + 'ms'"
+              ></div>
+            </div>
+            <span class="bar-date">{{ bar.date }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Row 5: Reorder suggestion -->
+    <div class="reorder-card" *ngIf="result.recommendedReorderQty">
+      <div class="reorder-left">
+        <mat-icon>shopping_cart</mat-icon>
+        <div>
+          <span class="reorder-title">Recommended Reorder Quantity</span>
+          <span class="reorder-sub">Based on lead time + safety stock formula</span>
+        </div>
+      </div>
+      <span class="reorder-qty">{{ result.recommendedReorderQty }} <small>units</small></span>
+    </div>
+
+  </div><!-- /results-col -->
+
+  <!-- Empty state when no result yet -->
+  <div class="empty-state" *ngIf="!result && !loading">
+    <mat-icon>auto_graph</mat-icon>
+    <h3>No Forecast Yet</h3>
+    <p>Run AI prediction to see demand insights and stock risks</p>
+  </div>
 
 </div>

@@ -114,7 +114,7 @@ namespace InventoryApi.Services
 
             var product = await GetAndValidateProduct(id);
 
-            product.IsDeleted = true;
+            //product.IsDeleted = true;
             product.IsActive = false;
 
             _repository.Update(product);

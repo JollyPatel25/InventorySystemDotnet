@@ -58,6 +58,9 @@ namespace InventoryApi.Configurations
             services.AddScoped<ITaxRepository, TaxRepository>();
             services.AddScoped<ITaxService, TaxService>();
 
+            // Log Service
+            services.AddScoped<ILogService, LogService>();
+
             return services;
         }
     }

@@ -67,7 +67,7 @@ export enum UserRole {
 
 export enum PlanType {
   Basic = 'Basic',
-  Standard = 'Standard',
+  Free = 'Free',
   Premium = 'Premium',
   Enterprise = 'Enterprise'
 }

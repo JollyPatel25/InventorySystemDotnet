@@ -17,10 +17,12 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SalesService } from '../../../../core/services/sales.service';
 import { WarehouseService } from '../../../../core/services/warehouse.service';
 import { ProductService } from '../../../../core/services/product.service';
+import { OrganizationService } from '../../../../core/services/organization.service';
 import { TokenService } from '../../../../core/services/token.service';
 
 import { WarehouseResponseDto } from '../../../../core/models/warehouse.models';
 import { ProductResponseDto } from '../../../../core/models/product.models';
+import { OrganizationResponseDto } from '../../../../core/models/organization.models';
 import { PaymentMethod } from '../../../../core/models/sales.models';
 
 import { SaleSuccessDialogComponent } from '../sale-success-dialog/sale-success-dialog.component';
@@ -29,16 +31,10 @@ import { SaleSuccessDialogComponent } from '../sale-success-dialog/sale-success-
   selector: 'app-create-sale',
   standalone: true,
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatDialogModule
+    CommonModule, ReactiveFormsModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatButtonModule, MatIconModule, MatDividerModule,
+    MatProgressSpinnerModule, MatDialogModule
   ],
   templateUrl: './create-sale.component.html',
   styleUrl: './create-sale.component.scss'
@@ -47,6 +43,7 @@ export class CreateSaleComponent implements OnInit {
   form!: FormGroup;
   warehouses: WarehouseResponseDto[] = [];
   products: ProductResponseDto[] = [];
+  org: OrganizationResponseDto | null = null;
   loading = false;
   error = '';
 
@@ -57,6 +54,7 @@ export class CreateSaleComponent implements OnInit {
     private salesService: SalesService,
     private warehouseService: WarehouseService,
     private productService: ProductService,
+    private orgService: OrganizationService,
     private tokenService: TokenService,
     private router: Router,
     private dialog: MatDialog
@@ -73,27 +71,27 @@ export class CreateSaleComponent implements OnInit {
 
     this.loadWarehouses();
     this.loadProducts();
+    this.loadOrg();
   }
 
-  // ─── Form Array ───────────────────────────────────────────────────────────
-
-  get items(): FormArray {
-    return this.form.get('items') as FormArray;
+  loadOrg(): void {
+    this.orgService.getMyOrg().subscribe({
+      next: res => { this.org = res.data; }
+    });
   }
+
+  get items(): FormArray { return this.form.get('items') as FormArray; }
 
   createItemRow(): FormGroup {
     const row = this.fb.group({
       productId: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]]
     });
-
     row.valueChanges.subscribe(() => this.recalculate());
     return row;
   }
 
-  addItem(): void {
-    this.items.push(this.createItemRow());
-  }
+  addItem(): void { this.items.push(this.createItemRow()); }
 
   removeItem(index: number): void {
     if (this.items.length === 1) return;
@@ -101,14 +99,10 @@ export class CreateSaleComponent implements OnInit {
     this.recalculate();
   }
 
-  // ─── Calculations ─────────────────────────────────────────────────────────
-
   getItemSubtotal(index: number): number {
     const row = this.items.at(index);
-    const productId = row.get('productId')?.value;
-    const quantity = row.get('quantity')?.value ?? 0;
-    const price = this.products.find(p => p.id === productId)?.price ?? 0;
-    return price * quantity;
+    const price = this.products.find(p => p.id === row.get('productId')?.value)?.price ?? 0;
+    return price * (row.get('quantity')?.value ?? 0);
   }
 
   get subTotal(): number {
@@ -121,11 +115,7 @@ export class CreateSaleComponent implements OnInit {
     return this.subTotal + Number(tax) - Number(discount);
   }
 
-  recalculate(): void {
-    // triggers change detection for totals
-  }
-
-  // ─── Data Loading ─────────────────────────────────────────────────────────
+  recalculate(): void {}
 
   loadWarehouses(): void {
     this.warehouseService.getAll().subscribe({
@@ -143,8 +133,6 @@ export class CreateSaleComponent implements OnInit {
     return this.products.find(p => p.id === productId)?.price ?? 0;
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────────────
-
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
@@ -153,13 +141,30 @@ export class CreateSaleComponent implements OnInit {
     this.salesService.create(this.form.value).subscribe({
       next: res => {
         this.loading = false;
+        const warehouseName = this.warehouses.find(w => w.id === this.form.value.warehouseId)?.name ?? '';
+
+        // Enrich items with product names and unitPrice for PDF
+        const enrichedSale = {
+          ...res.data,
+          warehouseName,
+          items: res.data.items.map(item => ({
+            ...item,
+            productName: this.products.find(p => p.id === item.productId)?.name ?? item.productId,
+            unitPrice: item.unitPrice ?? this.products.find(p => p.id === item.productId)?.price ?? 0
+          }))
+        };
+
         this.dialog.open(SaleSuccessDialogComponent, {
-          width: '400px',
+          width: '440px',
           disableClose: true,
-          data: { invoiceNumber: res.data.invoiceNumber }
+          data: {
+            invoiceNumber: res.data.invoiceNumber,
+            sale: enrichedSale,
+            products: this.products,
+            org: this.org
+          }
         }).afterClosed().subscribe(() => {
-          const role = this.tokenService.getRole();
-          const base = role === 'Manager' ? '/manager' : '/org';
+          const base = this.tokenService.getRole() === 'Manager' ? '/manager' : '/org';
           this.router.navigate([`${base}/sales`]);
         });
       },
@@ -171,18 +176,12 @@ export class CreateSaleComponent implements OnInit {
   }
 
   cancel(): void {
-    const role = this.tokenService.getRole();
-    const base = role === 'Manager' ? '/manager' : '/org';
+    const base = this.tokenService.getRole() === 'Manager' ? '/manager' : '/org';
     this.router.navigate([`${base}/sales`]);
   }
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────
+  asFormGroup(ctrl: AbstractControl): FormGroup { return ctrl as FormGroup; }
 
-  asFormGroup(ctrl: AbstractControl): FormGroup {
-    return ctrl as FormGroup;
-  }
-
-  // prevent duplicate product selection
   getAvailableProducts(currentIndex: number): ProductResponseDto[] {
     const selectedIds = this.items.controls
       .map((c, i) => i !== currentIndex ? c.get('productId')?.value : null)

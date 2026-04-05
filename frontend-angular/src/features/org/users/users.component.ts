@@ -9,11 +9,18 @@ import { DataTableComponent, TableColumn } from '../../../shared/components/data
 import { DialogService } from '../../../shared/services/dialog.service';
 import { CreateUserDialogComponent } from './create-user-dialog/create-user-dialog.component';
 import { AssignWarehouseDialogComponent } from './assign-warehouse-dialog/assign-warehouse-dialog.component';
+import { UserWarehouseAssignmentsDialogComponent } from '../users/user-warehouse-assignments-list-dialog/user-warehouse-assignments-list-dialog.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatSnackBarModule, PageHeaderComponent, DataTableComponent],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    PageHeaderComponent,
+    DataTableComponent
+  ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
@@ -30,7 +37,8 @@ export class UsersComponent implements OnInit {
     {
       key: 'actions', label: 'Actions', type: 'actions',
       actions: [
-        { icon: 'warehouse', label: 'Assign Warehouse', action: 'assign', color: '#1976d2' }
+        { icon: 'warehouse', label: 'Assign Warehouse', action: 'assign', color: '#637e39' },
+        { icon: 'visibility', label: 'View Assignments', action: 'viewAssignments', color: '#607867' }
       ]
     }
   ];
@@ -46,7 +54,7 @@ export class UsersComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.userService.getOrgUsers().subscribe({
+    this.userService.getAll().subscribe({
       next: res => { this.users = res.data; this.loading = false; },
       error: () => { this.loading = false; }
     });
@@ -55,18 +63,31 @@ export class UsersComponent implements OnInit {
   openCreateUser(): void {
     this.dialog.open(CreateUserDialogComponent, { width: '640px' })
       .afterClosed().subscribe(result => {
-        if (result) { this.snackBar.open('User created', 'Close', { duration: 3000 }); this.load(); }
+        if (result) {
+          this.snackBar.open('User created', 'Close', { duration: 3000 });
+          this.load();
+        }
       });
   }
 
   onAction(event: { action: string; row: UserListItemDto }): void {
     if (event.action === 'assign') this.openAssignWarehouse(event.row);
+    if (event.action === 'viewAssignments') this.openViewAssignments(event.row);
   }
 
   openAssignWarehouse(user: UserListItemDto): void {
     this.dialog.open(AssignWarehouseDialogComponent, { width: '440px', data: user.id })
       .afterClosed().subscribe(result => {
-        if (result) { this.snackBar.open('Warehouse assigned', 'Close', { duration: 3000 }); }
+        if (result) {
+          this.snackBar.open('Warehouse assigned', 'Close', { duration: 3000 });
+        }
       });
+  }
+
+  openViewAssignments(user: UserListItemDto): void {
+    this.dialog.open(UserWarehouseAssignmentsDialogComponent, {
+      width: '600px',
+      data: user
+    });
   }
 }

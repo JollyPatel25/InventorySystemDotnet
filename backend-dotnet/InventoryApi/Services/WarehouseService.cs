@@ -113,6 +113,19 @@ public class WarehouseService : IWarehouseService
         return warehouses.Select(Map);
     }
 
+    public async Task DeactivateAsync(Guid id)
+    {
+        EnsureAdmin();
+
+        var warehouse = await GetAndValidate(id);
+
+        warehouse.IsActive = false;
+
+        _repository.Update(warehouse);
+        await _repository.SaveChangesAsync();
+    }
+
+
     // ---------------- DELETE ----------------
     public async Task DeleteAsync(Guid id)
     {
@@ -127,6 +140,36 @@ public class WarehouseService : IWarehouseService
         await _repository.SaveChangesAsync();
     }
 
+
+    // ---------------- REACTIVATE ----------------
+
+    public async Task ReactivateAsync(Guid id)
+    {
+        EnsureAdmin();
+
+        var warehouse = await _repository.GetByIdAsync(id)
+                        ?? throw new Exception("Warehouse not found.");
+
+        if (!_currentUser.OrganizationId.HasValue)
+            throw new UnauthorizedAccessException("Organization not found.");
+
+        SecurityHelper.ValidateSameOrg(
+            warehouse.OrganizationId,
+            _currentUser.OrganizationId.Value
+        );
+
+        if (warehouse.IsDeleted)
+            throw new Exception("Cannot reactivate a deleted warehouse.");
+
+        if (warehouse.IsActive)
+            throw new Exception("Warehouse is already active.");
+
+        warehouse.IsActive = true;
+        warehouse.UpdatedAt = DateTime.UtcNow;
+
+        _repository.Update(warehouse);
+        await _repository.SaveChangesAsync();
+    }
     // ---------------- HELPERS ----------------
 
     private void EnsureAdmin()

@@ -1,45 +1,67 @@
 .topbar {
-  height: 64px;
-  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background-color: var(--mat-sys-surface);
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  z-index: 10;
+  height: 64px;
+  background: var(--mat-sys-surface, #fff);
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.topbar-left, .topbar-right {
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.user-btn {
+.current-org {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: var(--mat-sys-on-surface);
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--mat-sys-on-surface-variant);
+  padding: 4px 12px;
+  background: var(--mat-sys-surface-variant, #f5f5f5);
+  border-radius: 20px;
+  margin-right: 4px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
 }
 
-.user-name {
-  font-size: 0.875rem;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.user-btn {
+  gap: 4px;
+
+  .user-name {
+    font-size: 0.875rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .user-menu-header {
   display: flex;
   flex-direction: column;
   padding: 12px 16px;
+  pointer-events: none;
 
   .menu-email {
     font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--mat-sys-on-surface);
+    font-weight: 500;
   }
 
   .menu-role {
@@ -47,4 +69,43 @@
     color: var(--mat-sys-on-surface-variant);
     margin-top: 2px;
   }
+}
+
+.menu-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--mat-sys-on-surface-variant);
+  padding: 8px 16px 4px;
+  pointer-events: none;
+}
+
+.active-org {
+  background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+
+  mat-icon {
+    color: var(--mat-sys-primary);
+  }
+}
+
+.org-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+
+  .org-role {
+    font-size: 0.7rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .org-inactive {
+    font-size: 0.7rem;
+    color: var(--mat-sys-error);
+  }
+}
+
+.switch-spinner {
+  margin-left: auto;
 }

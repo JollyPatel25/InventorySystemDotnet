@@ -30,4 +30,12 @@ export class WarehouseService {
   delete(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.base}/delete/${id}`);
   }
+
+  deactivate(id: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.base}/deactivate/${id}`);
+  }
+
+  reactivate(id: string): Observable<ApiResponse<null>> {
+    return this.http.patch<ApiResponse<null>>(`${this.base}/reactivate/${id}`, {});
+  }
 }

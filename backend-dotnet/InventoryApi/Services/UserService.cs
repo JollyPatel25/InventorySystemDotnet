@@ -1,6 +1,9 @@
 ﻿using InventoryApi.Data;
+using InventoryApi.Models.DTOs.Common;
+using InventoryApi.Models.DTOs.Organization;
 using InventoryApi.Models.DTOs.Users;
 using InventoryApi.Models.Entities;
+using InventoryApi.Models.Enums;
 using InventoryApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -142,6 +145,210 @@ public class UserService : IUserService
             IsActive = a.IsActive
         });
     }
+
+    public async Task<IEnumerable<UserOrganizationDto>> GetMyOrganizationsAsync()
+    {
+        var userId = _currentUser.UserId;
+
+        var userOrgs = await _context.UserOrganizations
+            .Include(uo => uo.Organization)
+            .Where(uo =>
+                uo.UserId == userId &&
+                uo.IsActive &&
+                !uo.Organization.IsDeleted)
+            .ToListAsync();
+
+        return userOrgs.Select(uo => new UserOrganizationDto
+        {
+            OrganizationId = uo.OrganizationId,
+            OrganizationName = uo.Organization.Name,
+            Role = uo.Role.ToString(),
+            IsDefault = uo.IsDefault,
+            IsActive = uo.Organization.IsActive
+        });
+    }
+
+
+    // ---------------- GET ALL USERS (PLATFORM ADMIN) ----------------
+    public async Task<IEnumerable<PlatformUserListItemDto>> GetAllUsersAsync()
+    {
+        if (!_currentUser.IsPlatformAdmin)
+            throw new UnauthorizedAccessException("Only Platform Admin allowed.");
+
+        var users = await _context.Users
+            .Include(u => u.UserOrganizations)
+                .ThenInclude(uo => uo.Organization)
+            .Where(u => !u.IsDeleted && !u.IsPlatformAdmin)
+            .ToListAsync();
+
+        return users.Select(u => new PlatformUserListItemDto
+        {
+            Id = u.Id,
+            Email = u.Email,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            ContactNumber = u.ContactNumber,
+            IsActive = u.IsActive,
+            IsPlatformAdmin = u.IsPlatformAdmin,
+            Organizations = u.UserOrganizations
+                .Where(uo => uo.IsActive)
+                .Select(uo => new UserOrgRoleDto
+                {
+                    OrganizationId = uo.OrganizationId,
+                    OrganizationName = uo.Organization?.Name ?? "",
+                    Role = uo.Role.ToString(),
+                    IsDefault = uo.IsDefault
+                }).ToList()
+        });
+    }
+
+    // ---------------- DEACTIVATE USER (PLATFORM ADMIN) ----------------
+    public async Task DeactivateUserAsync(Guid userId)
+    {
+        if (!_currentUser.IsPlatformAdmin)
+            throw new UnauthorizedAccessException("Only Platform Admin allowed.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted)
+            ?? throw new Exception("User not found.");
+
+        if (user.IsPlatformAdmin)
+            throw new Exception("Cannot deactivate a Platform Admin.");
+
+        if (!user.IsActive)
+            throw new Exception("User is already inactive.");
+
+        user.IsActive = false;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+    }
+
+    // ---------------- REACTIVATE USER (PLATFORM ADMIN) ----------------
+    public async Task ReactivateUserAsync(Guid userId)
+    {
+        if (!_currentUser.IsPlatformAdmin)
+            throw new UnauthorizedAccessException("Only Platform Admin allowed.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted)
+            ?? throw new Exception("User not found.");
+
+        if (user.IsActive)
+            throw new Exception("User is already active.");
+
+        user.IsActive = true;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+    }
+
+
+    // ---------------- ASSIGN EXISTING USER AS ORG ADMIN ----------------
+    public async Task AssignAsOrgAdminAsync(Guid userId, Guid organizationId)
+    {
+        if (!_currentUser.IsPlatformAdmin)
+            throw new UnauthorizedAccessException("Only Platform Admin allowed.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted)
+            ?? throw new Exception("User not found.");
+
+        var org = await _context.Organizations
+            .FirstOrDefaultAsync(o => o.Id == organizationId)
+            ?? throw new Exception("Organization not found.");
+
+        var existing = await _context.UserOrganizations
+            .FirstOrDefaultAsync(uo =>
+                uo.UserId == userId &&
+                uo.OrganizationId == organizationId &&
+                uo.IsActive);
+
+        if (existing != null)
+        {
+            if (existing.Role == UserRole.Admin)
+                throw new Exception("User is already an Admin of this organization.");
+
+            // Upgrade existing role to Admin
+            existing.Role = UserRole.Admin;
+            await _context.SaveChangesAsync();
+            return;
+        }
+
+        // Not a member — add as Admin
+        var hasAnyOrg = await _context.UserOrganizations
+            .AnyAsync(uo => uo.UserId == userId && uo.IsActive);
+
+        var userOrg = new UserOrganization
+        {
+            UserId = userId,
+            OrganizationId = organizationId,
+            Role = UserRole.Admin,
+            IsActive = true,
+            IsDefault = !hasAnyOrg,
+            AssignedByUserId = _currentUser.UserId
+        };
+
+        _context.UserOrganizations.Add(userOrg);
+        await _context.SaveChangesAsync();
+    }
+
+    // ---------------- GET MY PROFILE ----------------
+    public async Task<UserProfileDto> GetMyProfileAsync()
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted)
+            ?? throw new Exception("User not found.");
+
+        return MapProfile(user);
+    }
+
+    // ---------------- UPDATE MY PROFILE ----------------
+    public async Task<UserProfileDto> UpdateMyProfileAsync(UpdateUserProfileDto dto)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted)
+            ?? throw new Exception("User not found.");
+
+        if (dto.FirstName != null) user.FirstName = dto.FirstName;
+        if (dto.LastName != null) user.LastName = dto.LastName;
+        if (dto.ContactNumber != null) user.ContactNumber = dto.ContactNumber;
+
+        if (dto.Address != null)
+        {
+            if (dto.Address.Line1 != null) user.Address.Line1 = dto.Address.Line1;
+            if (dto.Address.Line2 != null) user.Address.Line2 = dto.Address.Line2;
+            if (dto.Address.City != null) user.Address.City = dto.Address.City;
+            if (dto.Address.State != null) user.Address.State = dto.Address.State;
+            if (dto.Address.Country != null) user.Address.Country = dto.Address.Country;
+            if (dto.Address.PostalCode != null) user.Address.PostalCode = dto.Address.PostalCode;
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return MapProfile(user);
+    }
+
+    private static UserProfileDto MapProfile(User u) => new()
+    {
+        Id = u.Id,
+        Email = u.Email,
+        FirstName = u.FirstName,
+        LastName = u.LastName,
+        ContactNumber = u.ContactNumber,
+        IsPlatformAdmin = u.IsPlatformAdmin,
+        IsActive = u.IsActive,
+        Address = u.Address == null ? null : new AddressDto
+        {
+            Line1 = u.Address.Line1,
+            Line2 = u.Address.Line2,
+            City = u.Address.City,
+            State = u.Address.State,
+            Country = u.Address.Country,
+            PostalCode = u.Address.PostalCode
+        }
+    };
 
     // ---------------- HELPERS ----------------
     private void EnsureAdmin()

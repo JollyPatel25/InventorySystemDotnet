@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>
+  <mat-icon>warehouse</mat-icon>
+  Warehouse Assignments
+</h2>
+
+<mat-dialog-content>
+
+  <div class="user-info">
+    <div class="user-avatar">
+      <mat-icon>account_circle</mat-icon>
+    </div>
+    <div class="user-details">
+      <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+      <span class="user-meta">{{ user.email }} &nbsp;·&nbsp; {{ user.role }}</span>
+    </div>
+  </div>
+
+  <mat-divider />
+
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="32" />
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && assignments.length === 0">
+    <mat-icon>warehouse</mat-icon>
+    <p>No warehouse assignments found</p>
+  </div>
+
+  <div class="assignments-list" *ngIf="!loading && assignments.length > 0">
+    <div class="assignment-item" *ngFor="let a of assignments">
+      <div class="assignment-info">
+        <div class="warehouse-name">
+          <mat-icon>warehouse</mat-icon>
+          {{ a.warehouseName }}
+        </div>
+        <div class="warehouse-meta">
+          <span class="code">{{ a.warehouseCode }}</span>
+          <span class="access-badge" [ngClass]="a.accessLevel.toLowerCase()">
+            {{ a.accessLevel }}
+          </span>
+        </div>
+      </div>
+
+      <button
+        mat-icon-button
+        color="warn"
+        [matTooltip]="'Remove assignment'"
+        [disabled]="removingId === a.id"
+        (click)="removeAssignment(a)"
+      >
+        <mat-spinner *ngIf="removingId === a.id" diameter="18" />
+        <mat-icon *ngIf="removingId !== a.id">remove_circle_outline</mat-icon>
+      </button>
+    </div>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Close</button>
+</mat-dialog-actions>

@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-  <mat-icon>receipt</mat-icon>
+  <mat-icon style="vertical-align:middle;margin-right:8px;color:#1976d2">receipt_long</mat-icon>
   Invoice {{ data.sale.invoiceNumber }}
 </h2>
 
@@ -7,22 +7,20 @@
 
   <div class="meta-grid">
     <div class="meta-item">
-      <span class="meta-label">Warehouse</span>
-      <span class="meta-value">{{ data.sale.warehouseName || '—' }}</span>
-    </div>
-    <div class="meta-item">
       <span class="meta-label">Date</span>
-      <span class="meta-value">{{ data.sale.createdAt | date: 'dd MMM yyyy, HH:mm' }}</span>
+      <span class="meta-value">{{ data.sale.createdAt | date:'mediumDate' }}</span>
     </div>
     <div class="meta-item">
-      <span class="meta-label">Payment Method</span>
-      <span class="meta-value">{{ (data.sale as any).paymentMethod || '—' }}</span>
+      <span class="meta-label">Warehouse</span>
+      <span class="meta-value">{{ data.sale.warehouseName ?? '—' }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Payment</span>
+      <span class="meta-value">{{ data.sale.paymentMethod }}</span>
     </div>
   </div>
 
   <mat-divider />
-
-  <h3 class="section-title">Items</h3>
 
   <table class="items-table">
     <thead>
@@ -30,15 +28,15 @@
         <th>Product</th>
         <th class="num">Qty</th>
         <th class="num">Unit Price</th>
-        <th class="num">Total</th>
+        <th class="num">Subtotal</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let item of data.sale.items">
         <td>{{ getProductName(item.productId) }}</td>
         <td class="num">{{ item.quantity }}</td>
-        <td class="num">{{ item.unitPrice | currency }}</td>
-        <td class="num">{{ item.totalPrice | currency }}</td>
+        <td class="num">₹{{ (item.unitPrice ?? 0) | number:'1.2-2' }}</td>
+        <td class="num">₹{{ ((item.unitPrice ?? 0) * item.quantity) | number:'1.2-2' }}</td>
       </tr>
     </tbody>
   </table>
@@ -47,25 +45,27 @@
 
   <div class="totals">
     <div class="total-row">
-      <span>Subtotal</span>
-      <span>{{ data.sale.subTotal | currency }}</span>
-    </div>
-    <div class="total-row">
       <span>Tax</span>
-      <span>{{ data.sale.taxAmount | currency }}</span>
+      <span>+ ₹{{ data.sale.taxAmount | number:'1.2-2' }}</span>
     </div>
     <div class="total-row">
       <span>Discount</span>
-      <span>- {{ data.sale.discountAmount | currency }}</span>
+      <span>− ₹{{ data.sale.discountAmount | number:'1.2-2' }}</span>
     </div>
     <div class="total-row grand-total">
-      <span>Total</span>
-      <span>{{ data.sale.totalAmount | currency }}</span>
+      <span>Grand Total</span>
+      <span>₹{{ data.sale.totalAmount | number:'1.2-2' }}</span>
     </div>
   </div>
 
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="dialogRef.close()">Close</button>
+  <button mat-stroked-button (click)="dialogRef.close()">Close</button>
+  <button mat-stroked-button (click)="downloadInvoice()" [disabled]="!data.org">
+    <mat-icon>download</mat-icon> Download PDF
+  </button>
+  <button mat-flat-button color="primary" (click)="openInvoice()" [disabled]="!data.org">
+    <mat-icon>open_in_new</mat-icon> View Invoice
+  </button>
 </mat-dialog-actions>

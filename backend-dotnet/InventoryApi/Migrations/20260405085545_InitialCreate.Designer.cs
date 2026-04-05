@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InventoryApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260330191035_InitialCreate")]
+    [Migration("20260405085545_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -66,6 +66,53 @@ namespace InventoryApi.Migrations
                         .IsUnique();
 
                     b.ToTable("Inventories", (string)null);
+                });
+
+            modelBuilder.Entity("InventoryApi.Models.Entities.ApplicationLog", b =>
+                {
+                    b.Property<string>("Exception")
+                        .HasColumnType("text")
+                        .HasColumnName("exception");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("ipaddress");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organizationid");
+
+                    b.Property<string>("RequestMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("requestmethod");
+
+                    b.Property<string>("RequestPath")
+                        .HasColumnType("text")
+                        .HasColumnName("requestpath");
+
+                    b.Property<string>("StackTrace")
+                        .HasColumnType("text")
+                        .HasColumnName("stacktrace");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("userid");
+
+                    b.ToTable("applicationlogs", (string)null);
                 });
 
             modelBuilder.Entity("InventoryApi.Models.Entities.Prediction", b =>
@@ -351,6 +398,47 @@ namespace InventoryApi.Migrations
                     b.HasIndex("InventoryId", "CreatedAt");
 
                     b.ToTable("StockAdjustments", (string)null);
+                });
+
+            modelBuilder.Entity("InventoryApi.Models.Entities.TaxConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TaxName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TaxPercentage")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("TaxConfigurations");
                 });
 
             modelBuilder.Entity("InventoryApi.Models.Entities.UserOrganization", b =>
@@ -757,6 +845,17 @@ namespace InventoryApi.Migrations
                     b.Navigation("Inventory");
                 });
 
+            modelBuilder.Entity("InventoryApi.Models.Entities.TaxConfiguration", b =>
+                {
+                    b.HasOne("Organization", "Organization")
+                        .WithMany("TaxConfigurations")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("InventoryApi.Models.Entities.UserOrganization", b =>
                 {
                     b.HasOne("Organization", "Organization")
@@ -980,6 +1079,8 @@ namespace InventoryApi.Migrations
             modelBuilder.Entity("Organization", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("TaxConfigurations");
 
                     b.Navigation("UserOrganizations");
 

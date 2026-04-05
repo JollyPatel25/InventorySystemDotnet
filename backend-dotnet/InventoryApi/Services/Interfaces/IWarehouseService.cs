@@ -10,6 +10,7 @@ public interface IWarehouseService
 
     Task<WarehouseResponseDto> GetByIdAsync(Guid id);
     Task<IEnumerable<WarehouseResponseDto>> GetAllAsync();
-
+    Task ReactivateAsync(Guid id);
+    Task DeactivateAsync(Guid id);
     Task DeleteAsync(Guid id);
 }

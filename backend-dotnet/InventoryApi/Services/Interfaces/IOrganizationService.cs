@@ -12,5 +12,7 @@ namespace InventoryApi.Services.Interfaces
         Task<OrganizationResponseDto> UpdateAsync(UpdateOrganizationDto dto);
 
         Task DeactivateAsync(Guid id);
+
+        Task ReactivateAsync(Guid id);
     }
 }

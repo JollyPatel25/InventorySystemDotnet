@@ -23,6 +23,10 @@ public class Product : BaseEntity
 
     public required string UnitOfMeasure { get; set; }
 
+    // Prediction / Reorder
+    public int? ReorderPoint { get; set; }
+    public int LeadTimeDays { get; set; } = 3;
+
     // Navigation
     public Organization Organization { get; set; } = null!;
 

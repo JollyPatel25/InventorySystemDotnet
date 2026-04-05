@@ -18,7 +18,6 @@
     <div class="form-section">
       <h3 class="section-title">Transaction Info</h3>
       <div class="form-row">
-
         <mat-form-field appearance="outline">
           <mat-label>Warehouse</mat-label>
           <mat-select formControlName="warehouseId">
@@ -38,7 +37,6 @@
           <mat-icon matPrefix>payments</mat-icon>
           <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Required</mat-error>
         </mat-form-field>
-
       </div>
     </div>
 
@@ -67,7 +65,6 @@
           [formGroupName]="i"
           class="item-row"
         >
-
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId">
@@ -79,17 +76,17 @@
           </mat-form-field>
 
           <div class="unit-price">
-            {{ getProductPrice(asFormGroup(item).get('productId')?.value) | currency }}
+            ₹{{ getProductPrice(asFormGroup(item).get('productId')?.value) | number:'1.2-2' }}
           </div>
 
           <mat-form-field appearance="outline" class="qty-field">
             <mat-label>Qty</mat-label>
-            <input matInput type="number" formControlName="quantity" />
+            <input matInput type="number" formControlName="quantity" min="1" />
             <mat-error *ngIf="asFormGroup(item).get('quantity')?.hasError('min')">Min 1</mat-error>
           </mat-form-field>
 
           <div class="item-subtotal">
-            {{ getItemSubtotal(i) | currency }}
+            ₹{{ getItemSubtotal(i) | number:'1.2-2' }}
           </div>
 
           <button
@@ -101,7 +98,6 @@
           >
             <mat-icon>delete_outline</mat-icon>
           </button>
-
         </div>
       </div>
     </div>
@@ -114,15 +110,15 @@
       <div class="adjustments">
         <mat-form-field appearance="outline">
           <mat-label>Tax Amount</mat-label>
-          <input matInput type="number" formControlName="taxAmount" />
-          <span matTextPrefix>$&nbsp;</span>
+          <input matInput type="number" formControlName="taxAmount" min="0" />
+          <span matTextPrefix>₹&nbsp;</span>
           <mat-error *ngIf="form.get('taxAmount')?.hasError('min')">Must be >= 0</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Discount Amount</mat-label>
-          <input matInput type="number" formControlName="discountAmount" />
-          <span matTextPrefix>$&nbsp;</span>
+          <input matInput type="number" formControlName="discountAmount" min="0" />
+          <span matTextPrefix>₹&nbsp;</span>
           <mat-error *ngIf="form.get('discountAmount')?.hasError('min')">Must be >= 0</mat-error>
         </mat-form-field>
       </div>
@@ -130,20 +126,20 @@
       <div class="totals-summary">
         <div class="total-row">
           <span>Subtotal</span>
-          <span>{{ subTotal | currency }}</span>
+          <span>₹{{ subTotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row">
           <span>Tax</span>
-          <span>+ {{ form.get('taxAmount')?.value | currency }}</span>
+          <span>+ ₹{{ form.get('taxAmount')?.value | number:'1.2-2' }}</span>
         </div>
         <div class="total-row">
           <span>Discount</span>
-          <span>- {{ form.get('discountAmount')?.value | currency }}</span>
+          <span>- ₹{{ form.get('discountAmount')?.value | number:'1.2-2' }}</span>
         </div>
         <mat-divider />
         <div class="total-row grand">
           <span>Grand Total</span>
-          <span>{{ grandTotal | currency }}</span>
+          <span>₹{{ grandTotal | number:'1.2-2' }}</span>
         </div>
       </div>
 
@@ -151,7 +147,6 @@
 
     <p class="error-msg" *ngIf="error">{{ error }}</p>
 
-    <!-- Actions -->
     <div class="form-actions">
       <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
       <button mat-raised-button color="primary" type="button" (click)="onSubmit()" [disabled]="loading">

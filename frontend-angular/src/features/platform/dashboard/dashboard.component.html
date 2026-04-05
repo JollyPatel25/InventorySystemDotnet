@@ -1,21 +1,112 @@
 <app-page-header
   title="Platform Dashboard"
-  subtitle="Manage all organizations"
+  subtitle="System-wide overview"
   buttonLabel="Create Organization"
   buttonIcon="add"
   (buttonClick)="openCreateOrg()"
 />
 
-<div class="stats-grid">
-  <app-stat-card label="Total Organizations" [value]="orgs.length" icon="business" color="primary" />
-  <app-stat-card label="Active" [value]="activeCount" icon="check_circle" color="success" />
-  <app-stat-card label="Inactive" [value]="inactiveCount" icon="block" color="danger" />
+<!-- Stat Cards -->
+<div class="stats-grid" *ngIf="!loading">
+  <app-stat-card label="Total Organizations" [value]="totalOrgs" icon="business" color="primary" />
+  <app-stat-card label="Active" [value]="activeOrgs" icon="check_circle" color="success" />
+  <app-stat-card label="Inactive" [value]="inactiveOrgs" icon="block" color="danger" />
+  <app-stat-card label="Expiring Soon" [value]="expiringOrgs.length" icon="schedule" color="warning" />
+</div>
+<div class="stats-grid" *ngIf="loading">
+  <div class="skeleton-card" *ngFor="let i of [1,2,3,4]"></div>
 </div>
 
-<app-data-table
-  [columns]="columns"
-  [data]="orgs"
-  [loading]="loading"
-  searchPlaceholder="Search organizations..."
-  (actionClick)="onAction($event)"
-/>
+<!-- Plan Breakdown -->
+<div class="section" *ngIf="!loading && planCounts.length">
+  <h3 class="section-title">Organizations by Plan</h3>
+  <div class="plan-chips">
+    <div class="plan-chip" *ngFor="let p of planCounts">
+      <span class="plan-name">{{ p.plan }}</span>
+      <span class="plan-count">{{ p.count }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Expiry Alert Table -->
+<div class="section" *ngIf="!loading">
+  <div class="section-header">
+    <h3 class="section-title">
+      <mat-icon class="warning-icon">schedule</mat-icon>
+      Subscription Expiry Alerts
+      <span class="threshold-label">(within {{ thresholdDays }} days)</span>
+    </h3>
+
+    <div class="threshold-control">
+      <ng-container *ngIf="!editingThreshold">
+        <button mat-stroked-button (click)="editingThreshold = true; tempThreshold = thresholdDays">
+          <mat-icon>tune</mat-icon> Set Threshold
+        </button>
+      </ng-container>
+      <ng-container *ngIf="editingThreshold">
+        <mat-form-field appearance="outline" class="threshold-field">
+          <mat-label>Days</mat-label>
+          <input matInput type="number" [(ngModel)]="tempThreshold" min="1" max="365" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="saveThreshold()">Save</button>
+        <button mat-button (click)="editingThreshold = false">Cancel</button>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="expiry-table-wrap" *ngIf="expiringOrgs.length; else noExpiry">
+    <table mat-table [dataSource]="pagedExpiringOrgs" class="expiry-table">
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Organization</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="plan">
+        <th mat-header-cell *matHeaderCellDef>Plan</th>
+        <td mat-cell *matCellDef="let row">{{ row.planType }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="expiry">
+        <th mat-header-cell *matHeaderCellDef>Expiry Date</th>
+        <td mat-cell *matCellDef="let row">{{ row.subscriptionEndDate | date:'dd MMM yyyy' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="daysLeft">
+        <th mat-header-cell *matHeaderCellDef>Days Left</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="days-badge" [ngClass]="daysLeftClass(row.subscriptionEndDate)">
+            {{ daysLeft(row.subscriptionEndDate) < 0 ? 'Expired' : daysLeft(row.subscriptionEndDate) + ' days' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge" [ngClass]="row.isActive ? 'active' : 'inactive'">
+            {{ row.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="expiryColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: expiryColumns;"></tr>
+    </table>
+
+    <mat-paginator
+      [length]="expiringOrgs.length"
+      [pageSize]="expiryPageSize"
+      [pageSizeOptions]="[5, 10, 25]"
+      (page)="onExpiryPageChange($event)"
+      showFirstLastButtons
+    />
+  </div>
+
+  <ng-template #noExpiry>
+    <div class="no-expiry">
+      <mat-icon>check_circle</mat-icon>
+      <span>No organizations expiring within {{ thresholdDays }} days</span>
+    </div>
+  </ng-template>
+</div>

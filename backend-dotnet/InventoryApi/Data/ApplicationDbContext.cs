@@ -25,16 +25,17 @@ namespace InventoryApi.Data
         public DbSet<Prediction> Predictions => Set<Prediction>();
         public DbSet<TaxConfiguration> TaxConfigurations => Set<TaxConfiguration>();
 
+        public DbSet<ApplicationLog> ApplicationLogs => Set<ApplicationLog>();
         public DbSet<StockAdjustment> StockAdjustments => Set<StockAdjustment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            //  Apply all IEntityTypeConfiguration classes
+            modelBuilder.Entity<ApplicationLog>().HasNoKey().ToTable("applicationlogs");
+
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-            //  Global Soft Delete Filter
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
@@ -44,7 +45,6 @@ namespace InventoryApi.Data
                             System.Reflection.BindingFlags.NonPublic |
                             System.Reflection.BindingFlags.Static)
                         ?.MakeGenericMethod(entityType.ClrType);
-
                     method?.Invoke(null, new object[] { modelBuilder });
                 }
             }

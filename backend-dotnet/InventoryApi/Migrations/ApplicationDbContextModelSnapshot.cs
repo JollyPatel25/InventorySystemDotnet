@@ -65,11 +65,61 @@ namespace InventoryApi.Migrations
                     b.ToTable("Inventories", (string)null);
                 });
 
+            modelBuilder.Entity("InventoryApi.Models.Entities.ApplicationLog", b =>
+                {
+                    b.Property<string>("Exception")
+                        .HasColumnType("text")
+                        .HasColumnName("exception");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("ipaddress");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organizationid");
+
+                    b.Property<string>("RequestMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("requestmethod");
+
+                    b.Property<string>("RequestPath")
+                        .HasColumnType("text")
+                        .HasColumnName("requestpath");
+
+                    b.Property<string>("StackTrace")
+                        .HasColumnType("text")
+                        .HasColumnName("stacktrace");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("userid");
+
+                    b.ToTable("applicationlogs", (string)null);
+                });
+
             modelBuilder.Entity("InventoryApi.Models.Entities.Prediction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("AnomalyDetected")
+                        .HasColumnType("boolean");
 
                     b.Property<double>("ConfidenceScore")
                         .HasColumnType("double precision");
@@ -80,8 +130,14 @@ namespace InventoryApi.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("InsightMessage")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ModelUsed")
+                        .HasColumnType("text");
 
                     b.Property<int>("PredictedQuantity")
                         .HasColumnType("integer");
@@ -91,6 +147,19 @@ namespace InventoryApi.Migrations
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("RecommendedReorderQty")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StockoutRiskDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Trend")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("TrendPercent")
+                        .HasColumnType("double precision");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -145,6 +214,9 @@ namespace InventoryApi.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("LeadTimeDays")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -155,6 +227,9 @@ namespace InventoryApi.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ReorderPoint")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SKU")
                         .IsRequired()

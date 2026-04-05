@@ -24,6 +24,6 @@ export class InventoryService {
   }
 
   updateStock(dto: UpdateStockDto): Observable<ApiResponse<InventoryResponseDto>> {
-    return this.http.patch<ApiResponse<InventoryResponseDto>>(`${this.base}/adjust`, dto);
+    return this.http.post<ApiResponse<InventoryResponseDto>>(`${this.base}/adjust`, dto);
   }
 }

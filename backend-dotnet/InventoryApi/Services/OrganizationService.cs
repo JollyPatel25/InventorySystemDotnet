@@ -1,4 +1,5 @@
-﻿using InventoryApi.Models.DTOs.Organization;
+﻿using InventoryApi.Models.DTOs.Common;
+using InventoryApi.Models.DTOs.Organization;
 using InventoryApi.Models.Entities;
 using InventoryApi.Repositories.Interfaces;
 using InventoryApi.Services.Interfaces;
@@ -111,6 +112,22 @@ namespace InventoryApi.Services
             await _repository.SaveChangesAsync();
         }
 
+        // ---------------- REACTIVATE ----------------
+
+        public async Task ReactivateAsync(Guid id)
+        {
+            if (!_currentUser.IsPlatformAdmin)
+                throw new UnauthorizedAccessException("Only Platform Admin allowed.");
+
+            var org = await _repository.GetByIdAsync(id)
+                      ?? throw new Exception("Organization not found.");
+
+            org.IsActive = true;
+
+            await _repository.UpdateAsync(org);
+            await _repository.SaveChangesAsync();
+        }
+
         // ---------------- HELPERS ----------------
 
         private void EnsureAdmin()
@@ -139,7 +156,18 @@ namespace InventoryApi.Services
                 Name = o.Name,
                 ContactEmail = o.ContactEmail,
                 ContactPhone = o.ContactPhone,
-                IsActive = o.IsActive
+                IsActive = o.IsActive,
+                SubscriptionEndDate = o.SubscriptionEndDate,
+                PlanType = o.PlanType.ToString(),
+                Address = new AddressDto
+                {
+                    Line1 = o.Address.Line1,
+                    Line2 = o.Address.Line2,
+                    City = o.Address.City,
+                    State = o.Address.State,
+                    Country = o.Address.Country,
+                    PostalCode = o.Address.PostalCode
+                }
             };
         }
     }

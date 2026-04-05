@@ -190,7 +190,7 @@ public class AuthService : IAuthService
         return user;
     }
     // 4️⃣ Login
-    public async Task<String> LoginAsync(string email, string password)
+    public async Task<string> LoginAsync(string email, string password)
     {
         email = email.ToLower().Trim();
 
@@ -202,24 +202,77 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             throw new Exception("Invalid credentials.");
 
-        // Platform admin
+        // ✅ Platform Admin (no org restriction)
         if (user.IsPlatformAdmin)
         {
-            return GenerateJwtToken(user, null, new List<string> { "Admin" });
+            var defaultOrg = user.UserOrganizations
+                .Where(uo => uo.IsActive)
+                .OrderByDescending(uo => uo.IsDefault)
+                .FirstOrDefault();
+
+            if (defaultOrg != null)
+            {
+                return GenerateJwtToken(
+                    user,
+                    defaultOrg.OrganizationId,
+                    new List<string> { defaultOrg.Role.ToString(), "PlatformAdmin" }
+                );
+            }
+
+            // fallback (no orgs)
+            return GenerateJwtToken(user, null, new List<string> { "PlatformAdmin" });
         }
 
-        // 🔥 Get default org
-        var defaultOrg = user.UserOrganizations
-            .Where(uo => uo.IsActive)
-            .OrderByDescending(uo => uo.IsDefault)
-            .FirstOrDefault();
+        // 🔥 Step 1: Get all ACTIVE orgs
+        var activeOrgs = user.UserOrganizations
+            .Where(uo => uo.IsActive
+                      && uo.Organization.IsActive
+                      && !uo.Organization.IsDeleted)
+            .ToList();
 
-        if (defaultOrg == null)
+        if (!activeOrgs.Any())
             throw new Exception("No active organization found.");
 
-        var role = defaultOrg.Role.ToString();
+        // 🔥 Step 2: Filter NON-EXPIRED orgs
+        var validOrgs = activeOrgs
+            .Where(uo => uo.Organization.SubscriptionEndDate.Date >= DateTime.UtcNow.Date)
+            .ToList();
 
-        return GenerateJwtToken(user, defaultOrg.OrganizationId, new List<string> { role });
+        if (!validOrgs.Any())
+            throw new Exception("All organizations are expired. Contact admin.");
+
+        // 🔥 Step 3: Get current default org (ONLY from valid ones)
+        var currentDefault = validOrgs.FirstOrDefault(uo => uo.IsDefault);
+
+        // 🔥 Step 4: If default is expired OR not set → auto switch
+        if (currentDefault == null)
+        {
+            var newDefault = validOrgs.First();
+
+            // Remove old default(s)
+            foreach (var uo in user.UserOrganizations.Where(x => x.IsDefault))
+            {
+                uo.IsDefault = false;
+            }
+
+            await _context.SaveChangesAsync(); // ✅ FIRST SAVE
+
+            // Set new default
+            newDefault.IsDefault = true;
+
+            await _context.SaveChangesAsync(); // ✅ SECOND SAVE
+
+            currentDefault = newDefault;
+        }
+
+        // 🔥 Step 5: Generate token with selected org
+        var role = currentDefault.Role.ToString();
+
+        return GenerateJwtToken(
+            user,
+            currentDefault.OrganizationId,
+            new List<string> { role }
+        );
     }
 
     //  5️⃣ Generate JWT
@@ -350,15 +403,18 @@ public class AuthService : IAuthService
 
         var role = userOrg.Role.ToString();
 
-        // 🔥 Update default on switch (optional but recommended)
+        // Step 1: remove existing default
         foreach (var uo in user.UserOrganizations.Where(x => x.IsDefault))
         {
             uo.IsDefault = false;
         }
 
+        await _context.SaveChangesAsync(); // ✅ FIRST SAVE
+
+        // Step 2: set new default
         userOrg.IsDefault = true;
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(); // ✅ SECOND SAVE
 
         return GenerateJwtToken(user, organizationId, new List<string> { role });
     }
@@ -379,15 +435,18 @@ public class AuthService : IAuthService
             throw new Exception("User not assigned to this organization.");
 
         // 🔥 FIX 1: Remove existing default
+        // Step 1: remove existing default
         foreach (var uo in user.UserOrganizations.Where(x => x.IsDefault))
         {
             uo.IsDefault = false;
         }
 
-        // 🔥 Set new default
+        await _context.SaveChangesAsync(); // ✅ FIRST SAVE
+
+        // Step 2: set new default
         userOrg.IsDefault = true;
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(); // ✅ SECOND SAVE
     }
 
 }

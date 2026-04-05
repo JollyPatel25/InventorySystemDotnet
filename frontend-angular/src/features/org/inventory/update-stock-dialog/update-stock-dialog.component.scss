@@ -1,44 +1,95 @@
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 16px;
+mat-dialog-content {
+  width: 460px;
+  padding-top: 8px !important;
+}
 
-  .full-width {
-    grid-column: 1 / -1;
+.product-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--mat-sys-surface-variant, #f5f5f5);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.product-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .product-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--mat-sys-on-surface);
   }
 
-  mat-form-field {
-    width: 100%;
+  .product-sku {
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
   }
+}
+
+.qty-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  .qty-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .qty-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mat-sys-primary);
+  }
+}
+
+.projection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #e3f2fd;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  color: #1565c0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+
+    &.up { color: #2e7d32; }
+    &.down { color: #c62828; }
+  }
+
+  strong {
+    font-size: 1rem;
+    font-weight: 700;
+
+    &.negative { color: #c62828; }
+  }
+
+  .warn-text { color: #c62828; font-size: 0.8rem; }
+}
+
+.form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  mat-form-field { width: 100%; }
 }
 
 .error-msg {
   color: var(--mat-sys-error);
   font-size: 0.875rem;
   margin-top: 8px;
-}
-
-mat-dialog-content {
-  min-width: 460px;
-  padding-top: 8px !important;
-}
-
-.product-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  background: var(--mat-sys-surface-variant, #f5f5f5);
-  border-radius: 8px;
-
-  .product-name {
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .product-meta {
-    font-size: 0.875rem;
-    color: var(--mat-sys-on-surface-variant);
-  }
 }

@@ -1,50 +1,73 @@
 <h2 mat-dialog-title>{{ isEdit ? 'Edit Product' : 'Create Product' }}</h2>
 
 <mat-dialog-content>
-  <form [formGroup]="form" class="form-grid">
+  <form [formGroup]="form">
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Name</mat-label>
-      <input matInput formControlName="name" />
-      <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
-    </mat-form-field>
+    <!-- Section: Basic Info -->
+    <div class="form-section">
+      <p class="section-label">Basic Information</p>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Product Name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. Wireless Mouse" />
+          <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+      </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>SKU</mat-label>
-      <input matInput formControlName="sku" />
-      <mat-error *ngIf="form.get('sku')?.hasError('required')">Required</mat-error>
-    </mat-form-field>
+      <div class="form-row two-col">
+        <mat-form-field appearance="outline">
+          <mat-label>SKU</mat-label>
+          <input matInput formControlName="sku" placeholder="e.g. WM-001" />
+          <mat-error *ngIf="form.get('sku')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Category</mat-label>
-      <input matInput formControlName="category" />
-      <mat-error *ngIf="form.get('category')?.hasError('required')">Required</mat-error>
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <input matInput formControlName="category" placeholder="e.g. Electronics" />
+          <mat-error *ngIf="form.get('category')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+      </div>
+    </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Price</mat-label>
-      <input matInput type="number" formControlName="price" />
-      <mat-error *ngIf="form.get('price')?.hasError('required')">Required</mat-error>
-      <mat-error *ngIf="form.get('price')?.hasError('min')">Must be >= 0</mat-error>
-    </mat-form-field>
+    <!-- Section: Pricing & Unit -->
+    <div class="form-section">
+      <p class="section-label">Pricing & Unit</p>
+      <div class="form-row two-col">
+        <mat-form-field appearance="outline">
+          <mat-label>Price</mat-label>
+          <span matTextPrefix>₹&nbsp;</span>
+          <input matInput type="number" formControlName="price" placeholder="0.00" />
+          <mat-error *ngIf="form.get('price')?.hasError('required')">Required</mat-error>
+          <mat-error *ngIf="form.get('price')?.hasError('min')">Must be >= 0</mat-error>
+        </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Unit of Measure</mat-label>
-      <mat-select formControlName="unitOfMeasure">
-        <mat-option *ngFor="let u of units" [value]="u">{{ u }}</mat-option>
-      </mat-select>
-      <mat-error *ngIf="form.get('unitOfMeasure')?.hasError('required')">Required</mat-error>
-    </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Unit of Measure</mat-label>
+          <mat-select formControlName="unitOfMeasure">
+            <mat-option *ngFor="let u of units" [value]="u">{{ u }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('unitOfMeasure')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+      </div>
+    </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Barcode</mat-label>
-      <input matInput formControlName="barcode" />
-    </mat-form-field>
+    <!-- Section: Additional -->
+    <div class="form-section">
+      <p class="section-label">Additional Details</p>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Barcode</mat-label>
+          <input matInput formControlName="barcode" placeholder="Optional" />
+        </mat-form-field>
+      </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description" rows="3"></textarea>
-    </mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Optional product description"></textarea>
+        </mat-form-field>
+      </div>
+    </div>
 
   </form>
 
@@ -55,6 +78,6 @@
   <button mat-button [mat-dialog-close]="null">Cancel</button>
   <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="loading">
     <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
-    <span *ngIf="!loading">{{ isEdit ? 'Update' : 'Create' }}</span>
+    <span *ngIf="!loading">{{ isEdit ? 'Update Product' : 'Create Product' }}</span>
   </button>
 </mat-dialog-actions>

@@ -31,7 +31,7 @@
 
           <!-- Currency type -->
           <ng-container *ngIf="col.type === 'currency'">
-            {{ row[col.key] | currency }}
+           ₹{{ row[col.key] | number:'1.2-2' }}
           </ng-container>
 
           <!-- Date type -->

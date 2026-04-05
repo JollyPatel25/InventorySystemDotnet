@@ -1,40 +1,22 @@
 .page-container {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
   padding-bottom: 48px;
 }
 
 .page-header {
   margin-bottom: 32px;
-
   .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
-
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-
-    p {
-      margin: 2px 0 0;
-      font-size: 0.875rem;
-      color: var(--mat-sys-on-surface-variant);
-    }
+    h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+    p { margin: 2px 0 0; font-size: 0.875rem; color: var(--mat-sys-on-surface-variant); }
   }
 }
 
-.sale-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.form-section {
-  padding: 24px 0;
-}
+.sale-form { display: flex; flex-direction: column; gap: 0; }
+.form-section { padding: 24px 0; }
 
 .section-title {
   font-size: 0.875rem;
@@ -50,7 +32,6 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-
   .section-title { margin: 0; }
 }
 
@@ -58,36 +39,40 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-
   mat-form-field { width: 100%; }
 }
 
 .items-header {
   display: grid;
-  grid-template-columns: 1fr 100px 100px 120px 40px;
+  grid-template-columns: 1fr 110px 110px 120px 44px;
   gap: 12px;
-  padding: 0 8px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0 0 6px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   color: var(--mat-sys-on-surface-variant);
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  margin-bottom: 8px;
+
+  span { display: flex; align-items: center; }
+  span:nth-child(2), span:nth-child(4) { justify-content: flex-end; }
+  span:nth-child(3) { justify-content: center; }
 }
 
 .item-row {
   display: grid;
-  grid-template-columns: 1fr 100px 100px 120px 40px;
+  grid-template-columns: 1fr 110px 110px 120px 44px;
   gap: 12px;
   align-items: center;
   margin-bottom: 4px;
 
-  mat-form-field { width: 100%; }
+  mat-form-field { width: 100%; margin: 0; }
 
   .unit-price {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
     text-align: right;
-    padding-right: 8px;
   }
 
   .item-subtotal {
@@ -97,9 +82,7 @@
     color: var(--mat-sys-primary);
   }
 
-  .qty-field {
-    width: 100%;
-  }
+  button[mat-icon-button] { justify-self: center; }
 }
 
 .totals-section {
@@ -112,8 +95,6 @@
 .adjustments {
   display: flex;
   flex-direction: column;
-  gap: 0;
-
   mat-form-field { width: 100%; }
 }
 
@@ -129,10 +110,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.9rem;
-
-    span:first-child {
-      color: var(--mat-sys-on-surface-variant);
-    }
+    span:first-child { color: var(--mat-sys-on-surface-variant); }
   }
 
   .grand {
@@ -140,18 +118,11 @@
     font-size: 1.05rem;
     padding-top: 8px;
     margin-top: 4px;
-
-    span:last-child {
-      color: var(--mat-sys-primary);
-    }
+    span:last-child { color: var(--mat-sys-primary); }
   }
 }
 
-.error-msg {
-  color: var(--mat-sys-error);
-  font-size: 0.875rem;
-  margin: 8px 0 0;
-}
+.error-msg { color: var(--mat-sys-error); font-size: 0.875rem; margin: 8px 0 0; }
 
 .form-actions {
   display: flex;

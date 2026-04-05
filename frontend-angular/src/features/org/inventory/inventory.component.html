@@ -6,19 +6,37 @@
   (buttonClick)="openInitializeDialog()"
 />
 
-<div class="warehouse-selector">
-  <mat-form-field appearance="outline" class="warehouse-field">
-    <mat-label>Select Warehouse</mat-label>
+<div class="filters-bar">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Warehouse</mat-label>
     <mat-select
       [(ngModel)]="selectedWarehouseId"
       (ngModelChange)="onWarehouseChange()"
     >
       <mat-option *ngFor="let wh of warehouses" [value]="wh.id">
-        {{ wh.name }} <span class="wh-code">({{ wh.code }})</span>
+        {{ wh.name }} ({{ wh.code }})
       </mat-option>
     </mat-select>
     <mat-icon matPrefix>warehouse</mat-icon>
   </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field" *ngIf="selectedWarehouseId">
+    <mat-label>Stock Status</mat-label>
+    <mat-select [(ngModel)]="stockFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="low">Low Stock</mat-option>
+      <mat-option value="ok">Sufficient</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button
+    mat-stroked-button
+    class="clear-btn"
+    *ngIf="stockFilter !== 'all' || selectedWarehouseId"
+    (click)="clearFilters()"
+  >
+    <mat-icon>clear</mat-icon> Clear Filters
+  </button>
 </div>
 
 <ng-container *ngIf="!selectedWarehouseId">

@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UserService } from '../../../../core/services/user.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../core/models/auth.models';
 
 @Component({
@@ -30,6 +31,7 @@ export class CreateUserDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
+    private authService: AuthService,
     public dialogRef: MatDialogRef<CreateUserDialogComponent>
   ) {}
 
@@ -70,7 +72,7 @@ export class CreateUserDialogComponent implements OnInit {
       }
     };
 
-    this.userService.createUser(payload).subscribe({
+    this.authService.createUserWithRole(payload).subscribe({
       next: res => { this.loading = false; this.dialogRef.close(res.data); },
       error: err => { this.loading = false; this.error = err?.error?.message || 'Something went wrong.'; }
     });

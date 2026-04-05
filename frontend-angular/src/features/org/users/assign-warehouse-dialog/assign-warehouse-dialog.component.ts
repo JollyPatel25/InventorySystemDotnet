@@ -58,7 +58,14 @@ export class AssignWarehouseDialogComponent implements OnInit {
       accessLevel: this.form.value.accessLevel
     }).subscribe({
       next: res => { this.loading = false; this.dialogRef.close(res.data); },
-      error: err => { this.loading = false; this.error = err?.error?.message || 'Something went wrong.'; }
+      error: err => {
+        this.loading = false;
+
+        this.error =
+          err?.error?.Errors?.[0] ||   // ✅ correct
+          err?.error?.Message ||      // ✅ correct
+          'Something went wrong.';
+      }
     });
   }
 }

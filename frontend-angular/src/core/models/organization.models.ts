@@ -4,6 +4,9 @@ export interface OrganizationResponseDto {
   contactEmail: string;
   contactPhone: string;
   isActive: boolean;
+  subscriptionEndDate: string;
+  planType: string;
+  address?: AddressDto;
 }
 
 export interface UpdateOrganizationDto {

@@ -1,25 +1,33 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { OrganizationService } from '../../../core/services/organization.service';
 import { OrganizationResponseDto } from '../../../core/models/organization.models';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
-import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
-import { DialogService } from '../../../shared/services/dialog.service';
 import { CreateOrgDialogComponent } from './create-org-dialog/create-org-dialog.component';
-import { CreateOrgAdminDialogComponent } from './create-org-admin-dialog/create-org-admin-dialog.component';
+
+const THRESHOLD_KEY = 'platform_expiry_threshold_days';
 
 @Component({
   selector: 'app-platform-dashboard',
   standalone: true,
   imports: [
-    CommonModule, MatButtonModule, MatIconModule,
+    CommonModule, DatePipe, FormsModule,
+    MatButtonModule, MatIconModule,
     MatDialogModule, MatSnackBarModule,
-    PageHeaderComponent, StatCardComponent, DataTableComponent
+    MatTableModule, MatPaginatorModule,
+    MatFormFieldModule, MatInputModule, MatTooltipModule,
+    PageHeaderComponent, StatCardComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -28,24 +36,20 @@ export class DashboardComponent implements OnInit {
   orgs: OrganizationResponseDto[] = [];
   loading = false;
 
-  columns: TableColumn[] = [
-    { key: 'name', label: 'Name' },
-    { key: 'contactEmail', label: 'Email' },
-    { key: 'contactPhone', label: 'Phone' },
-    { key: 'isActive', label: 'Status', type: 'badge' },
-    {
-      key: 'actions', label: 'Actions', type: 'actions',
-      actions: [
-        { icon: 'person_add', label: 'Create Org Admin', action: 'create-admin', color: '#1976d2' },
-        { icon: 'block', label: 'Deactivate', action: 'deactivate', color: '#c62828' }
-      ]
-    }
-  ];
+  // Expiry threshold
+  thresholdDays: number = parseInt(localStorage.getItem(THRESHOLD_KEY) ?? '30');
+  editingThreshold = false;
+  tempThreshold: number = this.thresholdDays;
+
+  // Expiry table pagination
+  expiryPage = 0;
+  expiryPageSize = 5;
+
+  expiryColumns = ['name', 'plan', 'expiry', 'daysLeft', 'status'];
 
   constructor(
     private orgService: OrganizationService,
     private dialog: MatDialog,
-    private dialogService: DialogService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -59,40 +63,59 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  get activeCount(): number { return this.orgs.filter(o => o.isActive).length; }
-  get inactiveCount(): number { return this.orgs.filter(o => !o.isActive).length; }
+  get totalOrgs(): number { return this.orgs.length; }
+  get activeOrgs(): number { return this.orgs.filter(o => o.isActive).length; }
+  get inactiveOrgs(): number { return this.orgs.filter(o => !o.isActive).length; }
+
+  get planCounts(): { plan: string; count: number }[] {
+    const map = new Map<string, number>();
+    this.orgs.forEach(o => map.set(o.planType, (map.get(o.planType) ?? 0) + 1));
+    return Array.from(map.entries()).map(([plan, count]) => ({ plan, count }));
+  }
+
+  get expiringOrgs(): OrganizationResponseDto[] {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() + this.thresholdDays);
+    return this.orgs
+      .filter(o => new Date(o.subscriptionEndDate) <= threshold)
+      .sort((a, b) => new Date(a.subscriptionEndDate).getTime() - new Date(b.subscriptionEndDate).getTime());
+  }
+
+  get pagedExpiringOrgs(): OrganizationResponseDto[] {
+    const start = this.expiryPage * this.expiryPageSize;
+    return this.expiringOrgs.slice(start, start + this.expiryPageSize);
+  }
+
+  onExpiryPageChange(event: PageEvent): void {
+    this.expiryPage = event.pageIndex;
+    this.expiryPageSize = event.pageSize;
+  }
+
+  daysLeft(endDate: string): number {
+    return Math.ceil((new Date(endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
+
+  daysLeftClass(endDate: string): string {
+    const d = this.daysLeft(endDate);
+    if (d < 0) return 'expired';
+    if (d <= 7) return 'critical';
+    if (d <= 14) return 'warning';
+    return 'ok';
+  }
+
+  saveThreshold(): void {
+    if (this.tempThreshold < 1) return;
+    this.thresholdDays = this.tempThreshold;
+    localStorage.setItem(THRESHOLD_KEY, this.thresholdDays.toString());
+    this.editingThreshold = false;
+    this.expiryPage = 0;
+    this.snackBar.open(`Threshold set to ${this.thresholdDays} days`, 'Close', { duration: 2000 });
+  }
 
   openCreateOrg(): void {
     this.dialog.open(CreateOrgDialogComponent, { width: '680px' })
       .afterClosed().subscribe(result => {
         if (result) { this.snackBar.open('Organization created', 'Close', { duration: 3000 }); this.load(); }
       });
-  }
-
-  onAction(event: { action: string; row: OrganizationResponseDto }): void {
-    if (event.action === 'create-admin') this.openCreateOrgAdmin(event.row);
-    if (event.action === 'deactivate') this.deactivate(event.row);
-  }
-
-  openCreateOrgAdmin(org: OrganizationResponseDto): void {
-    this.dialog.open(CreateOrgAdminDialogComponent, { width: '680px', data: org })
-      .afterClosed().subscribe(result => {
-        if (result) { this.snackBar.open('Org Admin created', 'Close', { duration: 3000 }); }
-      });
-  }
-
-  deactivate(org: OrganizationResponseDto): void {
-    this.dialogService.confirm({
-      title: 'Deactivate Organization',
-      message: `Are you sure you want to deactivate "${org.name}"?`,
-      confirmLabel: 'Deactivate',
-      danger: true
-    }).subscribe(confirmed => {
-      if (!confirmed) return;
-      this.orgService.deactivateOrg(org.id).subscribe({
-        next: () => { this.snackBar.open('Organization deactivated', 'Close', { duration: 3000 }); this.load(); },
-        error: err => { this.snackBar.open(err?.error?.message || 'Failed', 'Close', { duration: 3000 }); }
-      });
-    });
   }
 }

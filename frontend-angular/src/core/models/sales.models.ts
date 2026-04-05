@@ -24,8 +24,8 @@ export interface SaleResponseDto {
   taxAmount: number;
   discountAmount: number;
   totalAmount: number;
+  paymentMethod: PaymentMethod;  // ← add this
   createdAt: string;
-  paymentMethod: PaymentMethod; // ✅ added
   items: SaleItemResponseDto[];
 }
 

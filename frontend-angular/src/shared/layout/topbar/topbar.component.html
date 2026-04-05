@@ -6,6 +6,13 @@
   </div>
 
   <div class="topbar-right">
+
+    <!-- Current Org indicator — shown for non-platform-admin -->
+    <div class="current-org" *ngIf="!isPlatformAdmin && currentOrgName">
+      <mat-icon>business</mat-icon>
+      <span>{{ currentOrgName }}</span>
+    </div>
+
     <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
       <mat-icon>account_circle</mat-icon>
       <span class="user-name">{{ userName }}</span>
@@ -13,15 +20,53 @@
     </button>
 
     <mat-menu #userMenu="matMenu">
-      <div class="user-menu-header">
+
+      <div class="user-menu-header" (click)="$event.stopPropagation()">
         <span class="menu-email">{{ userName }}</span>
         <span class="menu-role">{{ userRole }}</span>
       </div>
+
       <mat-divider />
+
+      <!-- Org Switcher — shown for all non-platform-admin users -->
+      <ng-container *ngIf="!isPlatformAdmin && organizations.length > 0">
+        <div class="menu-section-label" (click)="$event.stopPropagation()">
+          Organizations
+        </div>
+
+        <button
+          mat-menu-item
+          *ngFor="let org of organizations"
+          (click)="switchOrg(org.organizationId)"
+          [class.active-org]="org.organizationId === currentOrgId"
+          [disabled]="switchingOrgId !== null"
+        >
+          <mat-icon *ngIf="org.organizationId === currentOrgId">check_circle</mat-icon>
+          <mat-icon *ngIf="org.organizationId !== currentOrgId">
+            {{ org.isActive ? 'business' : 'business_center' }}
+          </mat-icon>
+
+          <span class="org-item-text">
+            {{ org.organizationName }}
+            <span class="org-role">{{ org.role }}</span>
+            <span class="org-inactive" *ngIf="!org.isActive"> · Inactive</span>
+          </span>
+
+          <mat-spinner
+            *ngIf="switchingOrgId === org.organizationId"
+            diameter="16"
+            class="switch-spinner"
+          />
+        </button>
+
+        <mat-divider />
+      </ng-container>
+
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>
         <span>Logout</span>
       </button>
+
     </mat-menu>
   </div>
 </header>

@@ -1,0 +1,52 @@
+<app-page-header
+  title="User Management"
+  subtitle="View and manage all users across organizations"
+/>
+
+<div class="filters-bar">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Organization</mat-label>
+    <mat-select [(ngModel)]="orgFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All Organizations</mat-option>
+      <mat-option *ngFor="let org of organizations" [value]="org.id">
+        {{ org.name }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Role</mat-label>
+    <mat-select [(ngModel)]="roleFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All Roles</mat-option>
+      <mat-option value="Admin">Admin</mat-option>
+      <mat-option value="Manager">Manager</mat-option>
+      <mat-option value="Viewer">Viewer</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Status</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="active">Active</mat-option>
+      <mat-option value="inactive">Inactive</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button
+    mat-stroked-button
+    class="clear-btn"
+    *ngIf="hasActiveFilters"
+    (click)="clearFilters()"
+  >
+    <mat-icon>clear</mat-icon> Clear Filters
+  </button>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [data]="filtered"
+  [loading]="loading"
+  searchPlaceholder="Search by name or email..."
+  (actionClick)="onAction($event)"
+/>

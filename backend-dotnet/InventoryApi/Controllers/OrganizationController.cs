@@ -66,5 +66,12 @@ namespace InventoryApi.Controllers
                 "Organization deactivated"
             ));
         }
+
+        [HttpPatch("reactivate/{id}")]
+        public async Task<IActionResult> Reactivate(Guid id)
+        {
+            await _service.ReactivateAsync(id);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Organization reactivated"));
+        }
     }
 }

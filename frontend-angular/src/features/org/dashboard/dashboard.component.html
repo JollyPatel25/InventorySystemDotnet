@@ -1,51 +1,130 @@
-<app-page-header title="Dashboard" subtitle="Overview of your organization" />
+<app-page-header
+  title="Dashboard"
+  subtitle="Overview of your organization"
+/>
 
-<!-- Stat Cards -->
-<div class="stats-grid" *ngIf="!loading && dashboard">
-  <app-stat-card
-    label="Total Products"
-    [value]="dashboard.totalProducts"
-    icon="inventory_2"
-    color="primary"
-  />
-  <app-stat-card
-    label="Total Warehouses"
-    [value]="dashboard.totalWarehouses"
-    icon="warehouse"
-    color="success"
-  />
-  <app-stat-card
-    label="Low Stock Items"
-    [value]="dashboard.lowStockCount"
-    icon="warning"
-    color="warning"
-  />
-  <app-stat-card
-    label="Sales Today"
-    [value]="dashboard.salesToday"
-    icon="point_of_sale"
-    color="primary"
-  />
+<!-- Primary Stats -->
+<div class="stat-cards" *ngIf="!loading && dashboard">
+  <app-stat-card label="Total Products"    [value]="dashboard.totalProducts"   icon="inventory_2"    color="primary" />
+  <app-stat-card label="Total Warehouses"  [value]="dashboard.totalWarehouses" icon="warehouse"      color="primary" />
+  <app-stat-card label="Low Stock Items"   [value]="dashboard.lowStockCount"   icon="warning"        color="warning" />
+  <app-stat-card label="Sales Today"       [value]="dashboard.salesToday"      icon="point_of_sale"  color="success" />
   <app-stat-card
     label="Revenue Today"
-    [value]="(dashboard.revenueToday | currency) ?? ''"
-    icon="attach_money"
+    [value]="(dashboard.revenueToday | currency:'INR':'symbol':'1.2-2':'en-IN') ?? ''"
+    icon="payments"
     color="success"
   />
 </div>
 
-<!-- Loading skeleton -->
-<div class="stats-grid" *ngIf="loading">
-  <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5]"></div>
-</div>
-
-<!-- Sales Today Table -->
-<div class="section">
-  <h3 class="section-title">Today's Sales</h3>
-  <app-data-table
-    [columns]="salesTodayColumns"
-    [data]="salesToday"
-    [loading]="salesLoading"
-    searchPlaceholder="Search invoices..."
+<!-- Secondary Stats -->
+<div class="stat-cards secondary" *ngIf="!loading && dashboard">
+  <app-stat-card
+    label="This Month Revenue"
+    [value]="(currentMonthRevenue | currency:'INR':'symbol':'1.2-2':'en-IN') ?? ''"
+    icon="trending_up"
+    color="primary"
+  />
+  <app-stat-card
+    label="Avg Monthly Revenue"
+    [value]="(avgMonthlySales | currency:'INR':'symbol':'1.2-2':'en-IN') ?? ''"
+    icon="bar_chart"
+    color="primary"
+  />
+  <app-stat-card
+    label="Top Products Tracked"
+    [value]="topProducts.length"
+    icon="leaderboard"
+    color="primary"
   />
 </div>
+
+<!-- Two column section -->
+<!-- <div class="dashboard-grid"> -->
+
+  <!-- Sales Today -->
+  <!-- <div class="dashboard-card">
+    <div class="card-header">
+      <mat-icon>receipt_long</mat-icon>
+      <h3>Sales Today</h3>
+    </div>
+    <app-data-table
+      [columns]="salesTodayColumns"
+      [data]="salesToday"
+      [loading]="salesLoading"
+      searchPlaceholder="Search invoice..."
+    />
+  </div> -->
+
+  <!-- Top Products -->
+  <!-- <div class="dashboard-card">
+    <div class="card-header">
+      <mat-icon>leaderboard</mat-icon>
+      <h3>Top Products</h3>
+    </div>
+    <app-data-table
+      [columns]="topProductsColumns"
+      [data]="topProducts"
+      [loading]="topProductsLoading"
+      searchPlaceholder="Search product..."
+    />
+  </div>  -->
+<!-- </div> -->
+
+ <!-- Reports Section (moved into Dashboard) -->
+<mat-tab-group
+  class="reports-tabs"
+  [(selectedIndex)]="selectedTabIndex"
+  (selectedIndexChange)="onTabChange($event)"
+>
+
+<!-- Top Products Graph -->
+  <mat-tab label="Top Products Graph">
+    <div class="tab-content">
+      <div class="chart-loading" *ngIf="topProductsLoading">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+
+      <div class="chart-empty" *ngIf="!topProductsLoading && !topProducts.length">
+        <mat-icon>leaderboard</mat-icon>
+        <p>No product data available</p>
+      </div>
+
+      <div class="chart-container" *ngIf="!topProductsLoading && topProducts.length">
+        <canvas #topProductsCanvas></canvas>
+      </div>
+    </div>
+  </mat-tab>
+
+  <!-- Monthly Revenue -->
+  <mat-tab label="Monthly Revenue">
+    <div class="tab-content">
+      <div class="chart-loading" *ngIf="revenueLoading">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+
+      <div class="chart-empty" *ngIf="!revenueLoading && !monthlyRevenue.length">
+        <mat-icon>bar_chart</mat-icon>
+        <p>No revenue data available</p>
+      </div>
+
+      <div class="chart-container" *ngIf="!revenueLoading && monthlyRevenue.length">
+        <canvas #revenueCanvas></canvas>
+      </div>
+    </div>
+  </mat-tab>
+
+
+  <!-- Sales Today -->
+  <mat-tab label="Sales Today">
+    <div class="tab-content">
+      <app-data-table
+        [columns]="salesTodayColumns"
+        [data]="salesToday"
+        [loading]="salesLoading"
+        searchPlaceholder="Search invoice..."
+      />
+    </div>
+  </mat-tab>
+
+</mat-tab-group>

@@ -1,0 +1,20 @@
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: var(--mat-sys-surface, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  flex-wrap: wrap;
+
+  .filter-field {
+    width: 200px;
+    margin: 0;
+  }
+
+  .clear-btn {
+    margin-top: 4px;
+}
+}

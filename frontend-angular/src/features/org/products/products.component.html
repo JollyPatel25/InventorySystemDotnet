@@ -6,6 +6,34 @@
   (buttonClick)="openCreateDialog()"
 />
 
+<div class="filters-bar">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Status</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="active">Active</mat-option>
+      <mat-option value="inactive">Inactive</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Category</mat-label>
+    <mat-select [(ngModel)]="categoryFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="">All Categories</mat-option>
+      <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button
+    mat-stroked-button
+    class="clear-btn"
+    *ngIf="statusFilter !== 'all' || categoryFilter"
+    (click)="clearFilters()"
+  >
+    <mat-icon>clear</mat-icon> Clear Filters
+  </button>
+</div>
+
 <app-data-table
   [columns]="columns"
   [data]="products"

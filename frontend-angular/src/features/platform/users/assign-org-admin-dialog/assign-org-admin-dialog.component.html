@@ -1,0 +1,56 @@
+<h2 mat-dialog-title>
+  <mat-icon>admin_panel_settings</mat-icon>
+  Assign as Org Admin
+</h2>
+
+<mat-dialog-content>
+
+  <div class="user-info">
+    <mat-icon>account_circle</mat-icon>
+    <div>
+      <span class="name">{{ user.firstName }} {{ user.lastName }}</span>
+      <span class="email">{{ user.email }}</span>
+    </div>
+  </div>
+
+  <div class="loading-orgs" *ngIf="orgsLoading">
+    <mat-spinner diameter="24" />
+    <span>Loading organizations...</span>
+  </div>
+
+  <div class="empty-orgs" *ngIf="!orgsLoading && organizations.length === 0">
+    <mat-icon>check_circle</mat-icon>
+    <p>This user is already an Admin in all organizations.</p>
+  </div>
+
+  <mat-form-field
+    appearance="outline"
+    class="full-width"
+    *ngIf="!orgsLoading && organizations.length > 0"
+  >
+    <mat-label>Select Organization</mat-label>
+    <mat-select [(ngModel)]="selectedOrgId">
+      <mat-option *ngFor="let org of organizations" [value]="org.id">
+        {{ org.name }}
+        <span class="org-status" *ngIf="!org.isActive"> · Inactive</span>
+      </mat-option>
+    </mat-select>
+    <mat-hint>User will be assigned as Admin of the selected organization</mat-hint>
+  </mat-form-field>
+
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="loading || !selectedOrgId || organizations.length === 0"
+  >
+    <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
+    <span *ngIf="!loading">Assign as Admin</span>
+  </button>
+</mat-dialog-actions>

@@ -7,6 +7,6 @@ namespace InventoryApi.Models.DTOs.Auth
         public Guid UserId { get; set; }
         public string Email { get; set; }
 
-        public List<UserOrganizationDto> Organizations { get; set; } = new();
+        public List<UserDefaultOrganizationDto> Organizations { get; set; } = new();
     }
 }

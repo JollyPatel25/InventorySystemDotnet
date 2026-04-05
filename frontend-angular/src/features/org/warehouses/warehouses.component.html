@@ -5,11 +5,31 @@
   buttonIcon="add"
   (buttonClick)="openCreate()"
 />
+<div class="filters-bar">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Status</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="active">Active</mat-option>
+      <mat-option value="inactive">Inactive</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+
+  <button
+    mat-stroked-button
+    class="clear-btn"
+    *ngIf="statusFilter !== 'all'"
+    (click)="clearFilters()"
+  >
+    <mat-icon>clear</mat-icon> Clear Filters
+  </button>
+</div>
 
 <app-data-table
   [columns]="columns"
   [data]="warehouses"
   [loading]="loading"
-  searchPlaceholder="Search warehouses..."
+  searchPlaceholder="Search by name, code or location..."
   (actionClick)="onAction($event)"
 />

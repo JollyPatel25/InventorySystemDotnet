@@ -1,13 +1,54 @@
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 16px;
+mat-dialog-content {
+  min-width: 560px;
+  max-width: 640px;
+  padding: 8px 4px 0 !important;
+  overflow-y: auto;
+  max-height: 72vh;
+}
 
-  .full-width {
-    grid-column: 1 / -1;
+.form-section {
+  margin-bottom: 20px;
+  padding: 20px 20px 4px;
+  background: var(--mat-sys-surface-variant, #f8f9fa);
+  border-radius: 10px;
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--mat-sys-primary);
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--mat-sys-outline-variant, #e0e0e0);
+    }
+  }
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+
+  &.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
   }
 
   mat-form-field {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .full-width {
     width: 100%;
   }
 }
@@ -15,10 +56,22 @@
 .error-msg {
   color: var(--mat-sys-error);
   font-size: 0.875rem;
-  margin-top: 8px;
+  margin: 4px 4px 0;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--mat-sys-error) 8%, transparent);
+  border-radius: 6px;
+  border-left: 3px solid var(--mat-sys-error);
 }
 
-mat-dialog-content {
-  min-width: 500px;
-  padding-top: 8px !important;
+h2[mat-dialog-title] {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  margin-bottom: 4px;
+}
+
+mat-dialog-actions {
+  padding: 16px 4px 8px !important;
+  border-top: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  margin-top: 4px;
+  gap: 8px;
 }

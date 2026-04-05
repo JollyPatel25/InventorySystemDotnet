@@ -5,6 +5,7 @@ export interface InventoryResponseDto {
   sku: string;
   quantity: number;
   lowStockThreshold: number;
+  stockStatus?: boolean; // computed on frontend — true = sufficient, false = low
 }
 
 export interface InitializeInventoryDto {
@@ -23,13 +24,13 @@ export interface UpdateStockDto {
 }
 
 export enum StockAdjustmentType {
-    Expired = 'Expired',
-    InitialStock = 'InitialStock',
-    ManualIncrease = 'ManualIncrease',
-    ManualDecrease = 'ManualDecrease',
-    Correction = 'Correction',
-    TransferIn = 'TransferIn',
-    TransferOut = 'TransferOut',
-    Sale = 'Sale',
-    Purchase = 'Purchase'
+  Expired = 'Expired',
+  InitialStock = 'InitialStock',
+  ManualIncrease = 'ManualIncrease',
+  ManualDecrease = 'ManualDecrease',
+  Correction = 'Correction',
+  TransferIn = 'TransferIn',
+  TransferOut = 'TransferOut',
+  Sale = 'Sale',
+  Purchase = 'Purchase'
 }

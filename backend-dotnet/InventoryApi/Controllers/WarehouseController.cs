@@ -64,6 +64,28 @@ public class WarehouseController : ControllerBase
             "Warehouse updated successfully"
         ));
     }
+    // DEACTIVATE
+    [HttpDelete("deactivate/{id}")]
+    public async Task<IActionResult> Deactivate(Guid id)
+    {
+        await _service.DeactivateAsync(id);
+
+        return Ok(ApiResponse<object>.SuccessResponse(
+            null,
+            "Warehouse deactivated successfully"
+        ));
+    }
+
+
+    [HttpPatch("reactivate/{id}")]
+    public async Task<IActionResult> Reactivate(Guid id)
+    {
+        await _service.ReactivateAsync(id);
+        return Ok(ApiResponse<object>.SuccessResponse(
+            null,
+            "Warehouse reactivated successfully"
+        ));
+    }
 
     // DELETE
     [HttpDelete("delete/{id}")]

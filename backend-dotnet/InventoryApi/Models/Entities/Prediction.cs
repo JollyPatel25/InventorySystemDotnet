@@ -2,18 +2,23 @@
 
 public class Prediction : BaseEntity
 {
-    // Foreign Keys
-    public required Guid ProductId { get; set; }
-    public required Guid WarehouseId { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid WarehouseId { get; set; }
 
-    // Prediction Data
-    public required int PredictedQuantity { get; set; }
-    public required double ConfidenceScore { get; set; } // 0–1
+    public int PredictedQuantity { get; set; }
+    public double ConfidenceScore { get; set; }
+    public DateTime PredictionForDate { get; set; }
 
-    // Prediction target date
-    public required DateTime PredictionForDate { get; set; }
+    // ── New enriched fields ──────────────────────────────────────────────────
+    public string Trend { get; set; } = "stable";           // "rising" | "falling" | "stable"
+    public double TrendPercent { get; set; }
+    public int? StockoutRiskDays { get; set; }
+    public int? RecommendedReorderQty { get; set; }
+    public bool AnomalyDetected { get; set; }
+    public string? InsightMessage { get; set; }
+    public string? ModelUsed { get; set; }
 
-    // Navigation
-    public Product Product { get; set; } = null!;
-    public Warehouse Warehouse { get; set; } = null!;
+    // ── Navigation ───────────────────────────────────────────────────────────
+    public Product? Product { get; set; }
+    public Warehouse? Warehouse { get; set; }
 }

@@ -1,0 +1,70 @@
+<app-page-header
+  title="Organizations"
+  subtitle="Manage all tenant organizations"
+  buttonLabel="Create Organization"
+  buttonIcon="add"
+  (buttonClick)="openCreate()"
+/>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Status</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="active">Active</mat-option>
+      <mat-option value="inactive">Inactive</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Plan</mat-label>
+    <mat-select [(ngModel)]="planFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All Plans</mat-option>
+      <mat-option *ngFor="let p of planOptions" [value]="p">{{ p }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Expiry</mat-label>
+    <mat-select [(ngModel)]="expiryFilter" (ngModelChange)="applyFilters()">
+      <mat-option value="all">All</mat-option>
+      <mat-option value="expiring">Expiring (within {{ thresholdDays }} days)</mat-option>
+      <mat-option value="expired">Already Expired</mat-option>
+      <mat-option value="valid">Valid</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Threshold Control -->
+  <div class="threshold-control">
+    <ng-container *ngIf="!editingThreshold">
+      <button mat-stroked-button
+        (click)="editingThreshold = true; tempThreshold = thresholdDays"
+        matTooltip="Set expiry threshold days used for 'Expiring' filter">
+        <mat-icon>tune</mat-icon> {{ thresholdDays }}d threshold
+      </button>
+    </ng-container>
+    <ng-container *ngIf="editingThreshold">
+      <mat-form-field appearance="outline" class="threshold-field">
+        <mat-label>Days</mat-label>
+        <input matInput type="number" [(ngModel)]="tempThreshold" min="1" max="365" />
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="saveThreshold()">Save</button>
+      <button mat-button (click)="editingThreshold = false">Cancel</button>
+    </ng-container>
+  </div>
+
+  <button mat-stroked-button (click)="resetFilters()">
+    <mat-icon>clear</mat-icon> Reset
+  </button>
+
+  <span class="count-label">{{ filtered.length }} results</span>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [data]="filtered"
+  [loading]="loading"
+  searchPlaceholder="Search organizations..."
+  (actionClick)="onAction($event)"
+/>

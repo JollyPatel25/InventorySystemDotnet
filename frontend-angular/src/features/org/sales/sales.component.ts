@@ -6,16 +6,19 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 
 import { SalesService } from '../../../core/services/sales.service';
 import { WarehouseService } from '../../../core/services/warehouse.service';
 import { ProductService } from '../../../core/services/product.service';
+import { OrganizationService } from '../../../core/services/organization.service';
 import { TokenService } from '../../../core/services/token.service';
 
 import { SaleResponseDto } from '../../../core/models/sales.models';
 import { WarehouseResponseDto } from '../../../core/models/warehouse.models';
 import { ProductResponseDto } from '../../../core/models/product.models';
+import { OrganizationResponseDto } from '../../../core/models/organization.models';
 
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
@@ -25,15 +28,11 @@ import { SaleDetailDialogComponent } from './sale-detail-dialog/sale-detail-dial
   selector: 'app-sales',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatIconModule,
-    PageHeaderComponent,
-    DataTableComponent
+    CommonModule, FormsModule,
+    MatDialogModule, MatSnackBarModule,
+    MatSelectModule, MatFormFieldModule,
+    MatIconModule, MatButtonModule,
+    PageHeaderComponent, DataTableComponent
   ],
   templateUrl: './sales.component.html',
   styleUrl: './sales.component.scss'
@@ -42,6 +41,7 @@ export class SalesComponent implements OnInit {
   warehouses: WarehouseResponseDto[] = [];
   sales: SaleResponseDto[] = [];
   products: ProductResponseDto[] = [];
+  org: OrganizationResponseDto | null = null;
   selectedWarehouseId: string | null = null;
   loading = false;
 
@@ -67,17 +67,24 @@ export class SalesComponent implements OnInit {
     private salesService: SalesService,
     private warehouseService: WarehouseService,
     private productService: ProductService,
+    private orgService: OrganizationService,
     private tokenService: TokenService,
     private router: Router,
     private dialog: MatDialog
   ) {
-    const role = this.tokenService.getRole();
-    this.isViewer = role === 'Viewer';
+    this.isViewer = this.tokenService.getRole() === 'Viewer';
   }
 
   ngOnInit(): void {
     this.loadWarehouses();
     this.loadProducts();
+    this.loadOrg();
+  }
+
+  loadOrg(): void {
+    this.orgService.getMyOrg().subscribe({
+      next: res => { this.org = res.data; }
+    });
   }
 
   loadWarehouses(): void {
@@ -93,11 +100,6 @@ export class SalesComponent implements OnInit {
   }
 
   onWarehouseChange(): void {
-    if (!this.selectedWarehouseId) return;
-    this.loadSales();
-  }
-
-  loadSales(): void {
     if (!this.selectedWarehouseId) return;
     this.loading = true;
     this.salesService.getByWarehouse(this.selectedWarehouseId).subscribe({
@@ -118,8 +120,7 @@ export class SalesComponent implements OnInit {
   }
 
   navigateToCreate(): void {
-    const role = this.tokenService.getRole();
-    const base = role === 'Manager' ? '/manager' : '/org';
+    const base = this.tokenService.getRole() === 'Manager' ? '/manager' : '/org';
     this.router.navigate([`${base}/sales/create`]);
   }
 
@@ -127,10 +128,10 @@ export class SalesComponent implements OnInit {
     if (event.action === 'view') this.openDetailDialog(event.row);
   }
 
-  openDetailDialog(sale: SaleResponseDto): void {
+  openDetailDialog(sale: any): void {
     this.dialog.open(SaleDetailDialogComponent, {
-      width: '640px',
-      data: { sale, products: this.products }
+      width: '680px',
+      data: { sale, products: this.products, org: this.org }
     });
   }
 }

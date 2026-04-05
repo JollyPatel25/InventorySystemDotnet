@@ -20,7 +20,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var columnWriters = new Dictionary<string, ColumnWriterBase>
 {
-    { "id", new SinglePropertyColumnWriter("Id", PropertyWriteMethod.Raw, NpgsqlDbType.Uuid) },
     { "timestamp", new TimestampColumnWriter(NpgsqlDbType.Timestamp) },
     { "level", new LevelColumnWriter(true, NpgsqlDbType.Varchar) },
     { "message", new RenderedMessageColumnWriter(NpgsqlDbType.Text) },
@@ -41,7 +40,7 @@ Log.Logger = new LoggerConfiguration()
         connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
         tableName: "applicationlogs",
         columnOptions: columnWriters,
-        needAutoCreateTable: true)
+        needAutoCreateTable: false)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -119,6 +118,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
 
 // -------------------- Add Authorization --------------------
 
@@ -209,30 +209,43 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-    var email = builder.Configuration["BootstrapAdmin:Email"];
-    var password = builder.Configuration["BootstrapAdmin:Password"];
 
-    if (!context.Users.Any())
+    var adminEmail = builder.Configuration["BootstrapAdmin:Email"]!.ToLower().Trim();
+
+    var adminExists = await context.Users
+        .AnyAsync(u => u.Email == adminEmail && u.IsPlatformAdmin);
+
+    if (!adminExists)
     {
-        await authService.RegisterPlatformAdminAsync(new RegisterPlatformAdminDto
+        try
         {
-            Email = email,
-            Password = password,
-            FirstName = "Jolly",
-            LastName = "Patel",
-            ContactNumber = "8160490971",
-            Address = new AddressDto
+            await authService.RegisterPlatformAdminAsync(new RegisterPlatformAdminDto
             {
-                Line1 = "Society",
-                Line2 = "Bapunagar",
-                City = "Ahmedabad",
-                State = "Gujarat",
-                Country = "India",
-                PostalCode = "123456",
-            },
-        });
-
-        Console.WriteLine("Platform Admin Seeded");
+                Email = adminEmail,
+                Password = builder.Configuration["BootstrapAdmin:Password"]!,
+                FirstName = "Jolly",
+                LastName = "Patel",
+                ContactNumber = "8160490971",
+                Address = new AddressDto
+                {
+                    Line1 = "Society",
+                    Line2 = "Bapunagar",
+                    City = "Ahmedabad",
+                    State = "Gujarat",
+                    Country = "India",
+                    PostalCode = "123456",
+                }
+            });
+            Console.WriteLine($"Platform Admin seeded: {adminEmail}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Seed failed: {ex.Message}");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"Platform Admin already exists: {adminEmail}");
     }
 }
 

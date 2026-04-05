@@ -4,8 +4,15 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
+import { SaleResponseDto } from '../../../../core/models/sales.models';
+import { ProductResponseDto } from '../../../../core/models/product.models';
+import { OrganizationResponseDto } from '../../../../core/models/organization.models';
+
 export interface SaleSuccessDialogData {
   invoiceNumber: string;
+  sale: SaleResponseDto & { warehouseName?: string };
+  products: ProductResponseDto[];
+  org: OrganizationResponseDto | null;
 }
 
 @Component({
@@ -18,6 +25,6 @@ export interface SaleSuccessDialogData {
 export class SaleSuccessDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<SaleSuccessDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: SaleSuccessDialogData
+    @Inject(MAT_DIALOG_DATA) public data: SaleSuccessDialogData,
   ) {}
 }

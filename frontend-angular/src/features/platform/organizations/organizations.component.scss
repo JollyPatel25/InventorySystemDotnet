@@ -1,0 +1,22 @@
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  .filter-field { width: 180px; }
+  .threshold-field { width: 90px; margin: 0; }
+}
+
+.threshold-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-label {
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+  margin-left: auto;
+}

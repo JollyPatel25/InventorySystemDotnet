@@ -1,0 +1,85 @@
+<app-page-header title="System Logs" subtitle="Monitor application activity and errors" />
+
+<!-- Filters -->
+<div class="filters">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search message or path</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [(ngModel)]="searchText" (keyup.enter)="onSearch()" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="level-field">
+    <mat-label>Log Level</mat-label>
+    <mat-select [(ngModel)]="selectedLevel" (ngModelChange)="onLevelChange()">
+      <mat-option value="">All</mat-option>
+      <mat-option *ngFor="let l of levels" [value]="l">{{ l }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button mat-stroked-button (click)="onSearch()">
+    <mat-icon>filter_alt</mat-icon> Apply
+  </button>
+  <button mat-stroked-button (click)="onReset()">
+    <mat-icon>clear</mat-icon> Reset
+  </button>
+</div>
+
+<!-- Loading -->
+<div class="loading-wrap" *ngIf="loading">
+  <mat-spinner diameter="40" />
+</div>
+
+<!-- Table -->
+<div class="table-wrap" [class.blurred]="loading">
+  <table mat-table [dataSource]="logs" class="logs-table">
+
+    <ng-container matColumnDef="timestamp">
+      <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+      <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'dd MMM yy, HH:mm:ss' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="level">
+      <th mat-header-cell *matHeaderCellDef>Level</th>
+      <td mat-cell *matCellDef="let row">
+        <span class="level-badge" [ngClass]="levelClass(row.level)">{{ row.level }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="method">
+      <th mat-header-cell *matHeaderCellDef>Method</th>
+      <td mat-cell *matCellDef="let row">{{ row.requestMethod || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="path">
+      <th mat-header-cell *matHeaderCellDef>Path</th>
+      <td mat-cell *matCellDef="let row">{{ row.requestPath || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="message">
+      <th mat-header-cell *matHeaderCellDef>Message</th>
+      <td mat-cell *matCellDef="let row">
+        <span [matTooltip]="row.exception || ''" class="message-cell">{{ row.message }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="ip">
+      <th mat-header-cell *matHeaderCellDef>IP</th>
+      <td mat-cell *matCellDef="let row">{{ row.ipAddress || '—' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" [ngClass]="levelClass(row.level) + '-row'"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td colspan="6" class="no-data">No logs found.</td>
+    </tr>
+  </table>
+</div>
+
+<mat-paginator
+  [length]="totalCount"
+  [pageSize]="50"
+  [pageSizeOptions]="[25, 50, 100]"
+  (page)="onPageChange($event)"
+  showFirstLastButtons
+/>

@@ -1,0 +1,58 @@
+<h2 mat-dialog-title>
+  <mat-icon>account_circle</mat-icon>
+  User Details
+</h2>
+
+<mat-dialog-content>
+
+  <div class="user-header">
+    <div class="avatar">
+      <mat-icon>account_circle</mat-icon>
+    </div>
+    <div class="user-primary">
+      <span class="full-name">{{ user.firstName }} {{ user.lastName }}</span>
+      <span class="email">{{ user.email }}</span>
+      <span class="status-badge" [ngClass]="user.isActive ? 'active' : 'inactive'">
+        {{ user.isActive ? 'Active' : 'Inactive' }}
+      </span>
+    </div>
+  </div>
+
+  <mat-divider />
+
+  <div class="info-section">
+    <p class="section-label">Contact</p>
+    <div class="info-row">
+      <mat-icon>phone</mat-icon>
+      <span>{{ user.contactNumber || '—' }}</span>
+    </div>
+  </div>
+
+  <mat-divider />
+
+  <div class="info-section">
+    <p class="section-label">Organization Memberships</p>
+
+    <div class="empty-orgs" *ngIf="user.organizations.length === 0">
+      <p>Not assigned to any organization</p>
+    </div>
+
+    <div class="org-list" *ngIf="user.organizations.length > 0">
+      <div class="org-item" *ngFor="let org of user.organizations">
+        <div class="org-left">
+          <mat-icon>business</mat-icon>
+          <div class="org-info">
+            <span class="org-name">{{ org.organizationName }}</span>
+            <span class="org-role">{{ org.role }}</span>
+          </div>
+        </div>
+        <span class="default-badge" *ngIf="org.isDefault">Default</span>
+      </div>
+    </div>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Close</button>
+</mat-dialog-actions>

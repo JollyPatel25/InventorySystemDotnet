@@ -12,6 +12,25 @@ namespace InventoryApi.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "applicationlogs",
+                columns: table => new
+                {
+                    timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    level = table.Column<string>(type: "text", nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    exception = table.Column<string>(type: "text", nullable: true),
+                    stacktrace = table.Column<string>(type: "text", nullable: true),
+                    userid = table.Column<Guid>(type: "uuid", nullable: true),
+                    organizationid = table.Column<Guid>(type: "uuid", nullable: true),
+                    requestpath = table.Column<string>(type: "text", nullable: true),
+                    requestmethod = table.Column<string>(type: "text", nullable: true),
+                    ipaddress = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Organizations",
                 columns: table => new
                 {
@@ -100,6 +119,32 @@ namespace InventoryApi.Migrations
                         principalTable: "Organizations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TaxName = table.Column<string>(type: "text", nullable: false),
+                    TaxPercentage = table.Column<decimal>(type: "numeric", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxConfigurations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaxConfigurations_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -478,6 +523,11 @@ namespace InventoryApi.Migrations
                 columns: new[] { "InventoryId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_TaxConfigurations_OrganizationId",
+                table: "TaxConfigurations",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserOrganizations_OrganizationId_IsActive",
                 table: "UserOrganizations",
                 columns: new[] { "OrganizationId", "IsActive" });
@@ -528,6 +578,9 @@ namespace InventoryApi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "applicationlogs");
+
+            migrationBuilder.DropTable(
                 name: "Predictions");
 
             migrationBuilder.DropTable(
@@ -535,6 +588,9 @@ namespace InventoryApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "StockAdjustments");
+
+            migrationBuilder.DropTable(
+                name: "TaxConfigurations");
 
             migrationBuilder.DropTable(
                 name: "UserOrganizations");

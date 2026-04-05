@@ -1,0 +1,84 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  mat-icon { color: var(--mat-sys-primary); }
+}
+
+mat-dialog-content {
+  min-width: 440px;
+  padding-top: 12px !important;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 20px;
+  background: var(--mat-sys-surface-variant, #f5f5f5);
+  border-radius: 8px;
+  margin-bottom: 20px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .email {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.loading-orgs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.empty-orgs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 8px;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #2e7d32;
+  }
+
+  p { margin: 0; font-size: 0.875rem; }
+}
+
+.full-width { width: 100%; }
+
+.org-status {
+  font-size: 0.75rem;
+  color: var(--mat-sys-error);
+}
+
+.error-msg {
+  color: var(--mat-sys-error);
+  font-size: 0.875rem;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--mat-sys-error) 8%, transparent);
+  border-radius: 6px;
+  border-left: 3px solid var(--mat-sys-error);
+}

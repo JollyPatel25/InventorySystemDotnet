@@ -19,6 +19,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { InitializeInventoryDialogComponent } from './initialize-inventory-dialog/initialize-inventory-dialog.component';
 import { UpdateStockDialogComponent } from './update-stock-dialog/update-stock-dialog.component';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-inventory',
@@ -30,6 +31,7 @@ import { UpdateStockDialogComponent } from './update-stock-dialog/update-stock-d
     MatSnackBarModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatButtonModule, // 🔥 ADD THIS
     MatIconModule,
     PageHeaderComponent,
     DataTableComponent
@@ -39,13 +41,16 @@ import { UpdateStockDialogComponent } from './update-stock-dialog/update-stock-d
 })
 export class InventoryComponent implements OnInit {
   warehouses: WarehouseResponseDto[] = [];
+  allInventory: InventoryResponseDto[] = [];
   inventory: InventoryResponseDto[] = [];
   selectedWarehouseId: string | null = null;
   loading = false;
   warehousesLoading = false;
 
+  // Filters
+  stockFilter: 'all' | 'low' | 'ok' = 'all';
+
   readonly isViewer: boolean;
-  readonly isAdmin: boolean;
 
   columns: TableColumn[] = [];
 
@@ -59,7 +64,6 @@ export class InventoryComponent implements OnInit {
   ) {
     const role = this.tokenService.getRole();
     this.isViewer = role === 'Viewer';
-    this.isAdmin = role === 'Admin' || this.tokenService.isPlatformAdmin();
   }
 
   ngOnInit(): void {
@@ -72,7 +76,7 @@ export class InventoryComponent implements OnInit {
       { key: 'productName', label: 'Product' },
       { key: 'sku', label: 'SKU' },
       { key: 'quantity', label: 'Quantity' },
-      { key: 'lowStockThreshold', label: 'Low Stock Threshold' },
+      { key: 'lowStockThreshold', label: 'Threshold' },
       { key: 'stockStatus', label: 'Stock Status', type: 'badge' }
     ];
 
@@ -82,7 +86,7 @@ export class InventoryComponent implements OnInit {
         label: 'Actions',
         type: 'actions',
         actions: [
-          { icon: 'tune', label: 'Update Stock', action: 'updateStock', color: '#1976d2' }
+          { icon: 'tune', label: 'Update Stock', action: 'updateStock', color: '#1976d2' },
         ]
       });
     }
@@ -92,7 +96,7 @@ export class InventoryComponent implements OnInit {
     this.warehousesLoading = true;
     this.warehouseService.getAll().subscribe({
       next: res => {
-        this.warehouses = res.data;
+        this.warehouses = res.data.filter(w => w.isActive);
         this.warehousesLoading = false;
       },
       error: () => { this.warehousesLoading = false; }
@@ -109,20 +113,36 @@ export class InventoryComponent implements OnInit {
     this.loading = true;
     this.inventoryService.getByWarehouse(this.selectedWarehouseId).subscribe({
       next: res => {
-        // Enrich with computed stockStatus for badge rendering
-        this.inventory = res.data.map(item => ({
+        this.allInventory = res.data.map(item => ({
           ...item,
-          stockStatus: item.quantity <= item.lowStockThreshold
+          stockStatus: item.quantity > item.lowStockThreshold
         }));
+        this.applyFilters();
         this.loading = false;
       },
       error: () => { this.loading = false; }
     });
   }
 
+  applyFilters(): void {
+    if (this.stockFilter === 'low') {
+      this.inventory = this.allInventory.filter(i => !i['stockStatus']);
+    } else if (this.stockFilter === 'ok') {
+      this.inventory = this.allInventory.filter(i => i['stockStatus']);
+    } else {
+      this.inventory = [...this.allInventory];
+    }
+  }
+
+  clearFilters(): void {
+    this.stockFilter = 'all';
+    this.selectedWarehouseId = null;
+    this.inventory = [...this.allInventory];
+  }
+
   openInitializeDialog(): void {
     this.dialog.open(InitializeInventoryDialogComponent, {
-      width: '560px',
+      width: '580px',
       data: { warehouseId: this.selectedWarehouseId }
     }).afterClosed().subscribe(result => {
       if (result) {
@@ -134,12 +154,13 @@ export class InventoryComponent implements OnInit {
 
   onAction(event: { action: string; row: InventoryResponseDto }): void {
     if (event.action === 'updateStock') this.openUpdateStockDialog(event.row);
+  
   }
 
   openUpdateStockDialog(item: InventoryResponseDto): void {
     this.dialog.open(UpdateStockDialogComponent, {
       width: '480px',
-      data: item
+      data: { ...item, warehouseId: this.selectedWarehouseId }
     }).afterClosed().subscribe(result => {
       if (result) {
         this.snackBar.open('Stock updated successfully', 'Close', { duration: 3000 });
