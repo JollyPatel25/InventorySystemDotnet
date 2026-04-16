@@ -39,6 +39,9 @@ public class InventoryService : IInventoryService
     // ---------------- GET INVENTORY BY WAREHOUSE ----------------
     public async Task<IEnumerable<InventoryResponseDto>> GetByWarehouseAsync(Guid warehouseId)
     {
+        // ✅ FIX #5: Verify calling user is active before allowing any operation
+        await EnsureCurrentUserIsActiveAsync();
+
         await ValidateWarehouseAccess(warehouseId, false);
 
         var inventories = await _inventoryRepository.GetByWarehouseAsync(warehouseId);
@@ -49,12 +52,29 @@ public class InventoryService : IInventoryService
     // ---------------- UPDATE STOCK ----------------
     public async Task<InventoryResponseDto> UpdateStockAsync(UpdateStockDto dto)
     {
+        // ✅ FIX #5: Verify calling user is active before allowing any operation
+        await EnsureCurrentUserIsActiveAsync();
+
+        // ✅ FIX #4: Verify the organization is active and subscription is valid
+        var orgId = SecurityHelper.GetOrgId(_currentUser);
+        await EnsureOrganizationActiveAsync(orgId);
+
         await ValidateWarehouseAccess(dto.WarehouseId, true);
 
         using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
+            // ✅ FIX #2: Validate product is active and not deleted before modifying stock
+            var product = await _productRepository.GetByIdAsync(dto.ProductId)
+                ?? throw new Exception("Product not found.");
+
+            if (product.IsDeleted)
+                throw new Exception($"Product '{product.Name}' has been deleted.");
+
+            if (!product.IsActive)
+                throw new Exception($"Product '{product.Name}' is inactive.");
+
             var inventory = await _inventoryRepository
                 .GetByProductAndWarehouseAsync(dto.ProductId, dto.WarehouseId);
 
@@ -85,14 +105,14 @@ public class InventoryService : IInventoryService
                 InventoryId = inventory.Id,
                 AdjustmentType = dto.AdjustmentType,
                 QuantityChanged = dto.QuantityChanged,
-                NewQuantity = inventory.Quantity, // ✅ FIXED
+                NewQuantity = inventory.Quantity,
                 Reason = dto.Reason,
                 CreatedByUserId = _currentUser.UserId
             };
 
             await _adjustmentRepository.AddAsync(adjustment);
 
-            await _context.SaveChangesAsync(); // ✅ single save
+            await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
 
@@ -103,11 +123,14 @@ public class InventoryService : IInventoryService
             await transaction.RollbackAsync();
             throw;
         }
-    } 
+    }
 
     // ---------------- LOW STOCK ----------------
     public async Task<IEnumerable<InventoryResponseDto>> GetLowStockAsync(Guid warehouseId)
     {
+        // ✅ FIX #5: Verify calling user is active before allowing any operation
+        await EnsureCurrentUserIsActiveAsync();
+
         await ValidateWarehouseAccess(warehouseId, false);
 
         var inventories = await _inventoryRepository.GetByWarehouseAsync(warehouseId);
@@ -115,6 +138,73 @@ public class InventoryService : IInventoryService
         return inventories
             .Where(i => i.Quantity <= i.LowStockThreshold)
             .Select(Map);
+    }
+
+    // ---------------- INITIALIZE INVENTORY ----------------
+    public async Task InitializeAsync(InitializeInventoryDto dto)
+    {
+        // ✅ FIX #5: Verify calling user is active before allowing any operation
+        await EnsureCurrentUserIsActiveAsync();
+
+        if (!_currentUser.OrganizationId.HasValue)
+            throw new UnauthorizedAccessException("Organization not found.");
+
+        var orgId = SecurityHelper.GetOrgId(_currentUser);
+
+        // ✅ FIX #4: Verify the organization is active and subscription is valid
+        await EnsureOrganizationActiveAsync(orgId);
+
+        // Validate product
+        var product = await _productRepository.GetByIdAsync(dto.ProductId)
+                      ?? throw new Exception("Product not found.");
+
+        SecurityHelper.ValidateSameOrg(product.OrganizationId, orgId);
+
+        // ✅ FIX #2: Check product is active and not deleted before initializing inventory
+        if (product.IsDeleted)
+            throw new Exception($"Product '{product.Name}' has been deleted.");
+
+        if (!product.IsActive)
+            throw new Exception($"Product '{product.Name}' is inactive.");
+
+        // Validate warehouse
+        var warehouse = await _warehouseRepository.GetByIdAsync(dto.WarehouseId)
+                        ?? throw new Exception("Warehouse not found.");
+
+        SecurityHelper.ValidateSameOrg(warehouse.OrganizationId, orgId);
+
+        // ✅ FIX #2: Check warehouse is active and not deleted before initializing inventory
+        if (warehouse.IsDeleted)
+            throw new Exception("Warehouse has been deleted.");
+
+        if (!warehouse.IsActive)
+            throw new Exception("Warehouse is inactive.");
+
+        // Check existing inventory
+        var existing = await _inventoryRepository
+            .GetByProductAndWarehouseAsync(dto.ProductId, dto.WarehouseId);
+
+        if (existing != null)
+            throw new Exception("Inventory already initialized for this product and warehouse.");
+
+        // Create inventory
+        var inventory = new Inventory
+        {
+            ProductId = dto.ProductId,
+            WarehouseId = dto.WarehouseId,
+            Quantity = dto.InitialQuantity,
+            LowStockThreshold = dto.LowStockThreshold,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = _currentUser.UserId
+        };
+
+        await _inventoryRepository.AddAsync(inventory);
+        await _inventoryRepository.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Inventory initialized Product {ProductId} Warehouse {WarehouseId}",
+            dto.ProductId,
+            dto.WarehouseId);
     }
 
     // ---------------- WAREHOUSE ACCESS VALIDATION ----------------
@@ -134,6 +224,13 @@ public class InventoryService : IInventoryService
 
         if (warehouse.OrganizationId != _currentUser.OrganizationId.Value)
             throw new UnauthorizedAccessException("Cross-tenant access denied.");
+
+        // ✅ FIX #2: Reject access to deleted or inactive warehouses
+        if (warehouse.IsDeleted)
+            throw new Exception("Warehouse has been deleted.");
+
+        if (!warehouse.IsActive)
+            throw new Exception("Warehouse is inactive.");
 
         if (_currentUser.Roles.Contains("Admin"))
             return;
@@ -167,6 +264,39 @@ public class InventoryService : IInventoryService
         throw new UnauthorizedAccessException("Unauthorized role.");
     }
 
+    // ---------------- GUARD HELPERS ----------------
+
+    /// <summary>
+    /// ✅ FIX #5: Ensures the currently authenticated user is active (not deactivated).
+    /// A deactivated user whose JWT hasn't expired should not be able to perform operations.
+    /// </summary>
+    private async Task EnsureCurrentUserIsActiveAsync()
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted)
+            ?? throw new UnauthorizedAccessException("User not found.");
+
+        if (!user.IsActive)
+            throw new UnauthorizedAccessException("User account is deactivated.");
+    }
+
+    /// <summary>
+    /// ✅ FIX #4: Ensures the organization is active and subscription has not expired.
+    /// Deactivated org members should not be able to perform any business operations.
+    /// </summary>
+    private async Task EnsureOrganizationActiveAsync(Guid organizationId)
+    {
+        var org = await _context.Organizations
+            .FirstOrDefaultAsync(o => o.Id == organizationId)
+            ?? throw new Exception("Organization not found.");
+
+        if (!org.IsActive)
+            throw new UnauthorizedAccessException("Organization is inactive.");
+
+        if (org.SubscriptionEndDate < DateTime.UtcNow)
+            throw new UnauthorizedAccessException("Organization subscription has expired.");
+    }
+
     private static InventoryResponseDto Map(Inventory i)
     {
         return new InventoryResponseDto
@@ -178,51 +308,5 @@ public class InventoryService : IInventoryService
             Quantity = i.Quantity,
             LowStockThreshold = i.LowStockThreshold
         };
-    }
-
-    public async Task InitializeAsync(InitializeInventoryDto dto)
-    {
-        if (!_currentUser.OrganizationId.HasValue)
-            throw new UnauthorizedAccessException("Organization not found.");
-
-        var orgId = SecurityHelper.GetOrgId(_currentUser);
-
-        // Validate product
-        var product = await _productRepository.GetByIdAsync(dto.ProductId)
-                      ?? throw new Exception("Product not found.");
-
-        SecurityHelper.ValidateSameOrg(product.OrganizationId,orgId);
-
-        // Validate warehouse
-        var warehouse = await _warehouseRepository.GetByIdAsync(dto.WarehouseId)
-                        ?? throw new Exception("Warehouse not found.");
-
-        SecurityHelper.ValidateSameOrg(warehouse.OrganizationId, orgId);
-
-        // Check existing inventory
-        var existing = await _inventoryRepository
-            .GetByProductAndWarehouseAsync(dto.ProductId, dto.WarehouseId);
-
-        if (existing != null)
-            throw new Exception("Inventory already initialized for this product and warehouse.");
-
-        // Create inventory
-        var inventory = new Inventory
-        {
-            ProductId = dto.ProductId,
-            WarehouseId = dto.WarehouseId,
-            Quantity = dto.InitialQuantity,
-            LowStockThreshold = dto.LowStockThreshold,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = _currentUser.UserId
-        };
-
-        await _inventoryRepository.AddAsync(inventory);
-        await _inventoryRepository.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Inventory initialized Product {ProductId} Warehouse {WarehouseId}",
-            dto.ProductId,
-            dto.WarehouseId);
     }
 }

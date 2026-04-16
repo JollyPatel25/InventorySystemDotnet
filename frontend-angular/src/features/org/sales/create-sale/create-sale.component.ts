@@ -170,7 +170,13 @@ export class CreateSaleComponent implements OnInit {
       },
       error: err => {
         this.loading = false;
-        this.error = err?.error?.message || 'Something went wrong.';
+
+        // ✅ FIXED (capital E)
+        if (err?.error?.Errors && err.error.Errors.length > 0) {
+          this.error = err.error.Errors[0];
+        } else {
+          this.error = err?.error?.Message || 'Something went wrong.';
+        }
       }
     });
   }

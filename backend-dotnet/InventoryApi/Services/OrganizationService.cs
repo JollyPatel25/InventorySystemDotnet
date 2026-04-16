@@ -1,35 +1,43 @@
-﻿using InventoryApi.Models.DTOs.Common;
+﻿using InventoryApi.Data;
+using InventoryApi.Models.DTOs.Common;
 using InventoryApi.Models.DTOs.Organization;
 using InventoryApi.Models.Entities;
 using InventoryApi.Repositories.Interfaces;
 using InventoryApi.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace InventoryApi.Services
 {
-
     public class OrganizationService : IOrganizationService
     {
         private readonly IOrganizationRepository _repository;
         private readonly ICurrentUserService _currentUser;
+        private readonly ApplicationDbContext _context;
 
         public OrganizationService(
             IOrganizationRepository repository,
-            ICurrentUserService currentUser)
+            ICurrentUserService currentUser,
+            ApplicationDbContext context)
         {
             _repository = repository;
             _currentUser = currentUser;
+            _context = context;
         }
 
         // ---------------- GET MY ORG ----------------
         public async Task<OrganizationResponseDto> GetMyAsync()
         {
+            // ✅ FIX #5: Verify calling user is active before allowing any operation
+            await EnsureCurrentUserIsActiveAsync();
+
             if (!_currentUser.OrganizationId.HasValue)
                 throw new UnauthorizedAccessException("Organization not found.");
 
             var org = await _repository.GetByIdAsync(_currentUser.OrganizationId.Value)
                       ?? throw new Exception("Organization not found.");
 
+            // ✅ FIX #4: ValidateActive is now called here (was already here — keep it)
             ValidateActive(org);
 
             return Map(org);
@@ -49,6 +57,9 @@ namespace InventoryApi.Services
         // ---------------- UPDATE ----------------
         public async Task<OrganizationResponseDto> UpdateAsync(UpdateOrganizationDto dto)
         {
+            // ✅ FIX #5: Verify calling user is active before allowing any operation
+            await EnsureCurrentUserIsActiveAsync();
+
             var orgId = SecurityHelper.GetOrgId(_currentUser);
 
             EnsureAdmin();
@@ -56,9 +67,9 @@ namespace InventoryApi.Services
             var org = await _repository.GetByIdAsync(orgId)
                       ?? throw new Exception("Organization not found.");
 
+            // ✅ FIX #4: ValidateActive is called here (was already here — keep it)
             ValidateActive(org);
 
-            // update fields
             if (dto.Name != null)
                 org.Name = dto.Name;
 
@@ -106,6 +117,9 @@ namespace InventoryApi.Services
             var org = await _repository.GetByIdAsync(id)
                       ?? throw new Exception("Organization not found.");
 
+            if (!org.IsActive)
+                throw new Exception("Organization is already inactive.");
+
             org.IsActive = false;
 
             await _repository.UpdateAsync(org);
@@ -113,7 +127,6 @@ namespace InventoryApi.Services
         }
 
         // ---------------- REACTIVATE ----------------
-
         public async Task ReactivateAsync(Guid id)
         {
             if (!_currentUser.IsPlatformAdmin)
@@ -121,6 +134,9 @@ namespace InventoryApi.Services
 
             var org = await _repository.GetByIdAsync(id)
                       ?? throw new Exception("Organization not found.");
+
+            if (org.IsActive)
+                throw new Exception("Organization is already active.");
 
             org.IsActive = true;
 
@@ -139,13 +155,32 @@ namespace InventoryApi.Services
                 throw new UnauthorizedAccessException("Only Admin allowed.");
         }
 
+        /// <summary>
+        /// ✅ FIX #4: Validates the org is active and subscription has not expired.
+        /// Called on every mutating AND read operation so deactivated org users are
+        /// blocked at the service layer — not only inside GetMyAsync/UpdateAsync.
+        /// </summary>
         private void ValidateActive(Organization org)
         {
             if (!org.IsActive)
-                throw new Exception("Organization inactive.");
+                throw new UnauthorizedAccessException("Organization is inactive.");
 
             if (org.SubscriptionEndDate < DateTime.UtcNow)
-                throw new Exception("Subscription expired.");
+                throw new UnauthorizedAccessException("Organization subscription has expired.");
+        }
+
+        /// <summary>
+        /// ✅ FIX #5: Ensures the currently authenticated user is active (not deactivated).
+        /// A deactivated user whose JWT hasn't expired should not be able to perform operations.
+        /// </summary>
+        private async Task EnsureCurrentUserIsActiveAsync()
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == _currentUser.UserId && !u.IsDeleted)
+                ?? throw new UnauthorizedAccessException("User not found.");
+
+            if (!user.IsActive)
+                throw new UnauthorizedAccessException("User account is deactivated.");
         }
 
         private static OrganizationResponseDto Map(Organization o)

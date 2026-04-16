@@ -322,8 +322,8 @@ public class AuthService : IAuthService
     CreateUserWithRoleDto dto)
     {
         // 🔥 Role validation (VERY IMPORTANT)
-        if (currentUserRole == UserRole.Manager && dto.Role != UserRole.Viewer)
-            throw new Exception("Managers can only create Viewer users.");
+        //if (currentUserRole == UserRole.Manager && dto.Role != UserRole.Viewer)
+        //    throw new Exception("Managers can only create Viewer users.");
 
         if (currentUserRole == UserRole.Admin &&
             (dto.Role == UserRole.Admin))
