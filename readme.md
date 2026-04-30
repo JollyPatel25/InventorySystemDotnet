@@ -500,6 +500,5 @@ Found a bug or have a feature request? [Open an issue](../../issues) with:
 
 <div align="center">
 
-Made with ❤️ by [Jolly Patel](https://github.com/)
 
 </div>
