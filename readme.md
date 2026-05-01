@@ -116,13 +116,13 @@ Every database query is automatically scoped to the `OrganizationId` extracted f
 
 ### Backend Layer Responsibilities
 
-```
-Controller   →  Route handling, JWT claim extraction, response shaping
-Service      →  Business logic, tenant scoping, transaction management
-Repository   →  DB abstraction via EF Core, generic CRUD base
-Entity       →  DB models extending BaseEntity (Id, CreatedAt, IsDeleted …)
-DTO          →  Request/Response contracts — entities never leave the API
-```
+| Layer | Responsibility |
+|-------|---------------|
+| Controller | Route handling, JWT claim extraction, response shaping |
+| Service | Business logic, tenant scoping, transaction management |
+| Repository | DB abstraction via EF Core, generic CRUD base |
+| Entity | DB models extending BaseEntity (Id, CreatedAt, IsDeleted…) |
+| DTO | Request/Response contracts — entities never leave the API |
 
 ### Frontend Structure
 
@@ -149,11 +149,10 @@ src/
 
 ```
 inventory-system/
-├── ai-service-python/          # FastAPI demand forecasting microservice
+├── ai-service-python/                     # FastAPI demand forecasting microservice
 │   ├── main.py
 │   └── requirements.txt
-│
-├── backend-dotnet/             # ASP.NET Core Web API
+├── backend-dotnet/                        # ASP.NET Core Web API
 │   ├── Controllers/
 │   ├── Services/
 │   ├── Repositories/
@@ -161,20 +160,18 @@ inventory-system/
 │   ├── DTOs/
 │   ├── Migrations/
 │   └── appsettings.json
-│
-├── frontend-angular/           # Angular 20 SPA
+├── frontend-angular/                      # Angular 20 SPA
 │   ├── src/
 │   └── angular.json
-│
-├── insert_data_to_postgre_script.py   # Seed script for initial data
+├── insert_data_to_postgre_script.py       # Main seed script (complete dummy data)
+├── insert_sales.py                        # Optional: AI forecasting test data
+├── insert_multi_tenancy.py               # Optional: Multi-org user test data
 └── README.md
 ```
 
 ---
 
 ## ⚙️ Prerequisites
-
-Make sure you have the following installed:
 
 | Tool | Version |
 |------|---------|
@@ -202,11 +199,6 @@ cd inventory-system
 ```bash
 cd ai-service-python
 pip install -r requirements.txt
-```
-
-Start the service:
-
-```bash
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
@@ -220,8 +212,6 @@ python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```bash
 cd backend-dotnet
 ```
-
-Open the `.sln` file in **Visual Studio** (recommended) or use the CLI.
 
 Apply database migrations:
 
@@ -242,15 +232,58 @@ dotnet run
 
 ---
 
-### 4. Database Setup (PostgreSQL)
+### 4. Database Seeding
 
-After running migrations, seed initial data:
+#### Understanding the Seed Scripts
+
+There are 3 seed scripts. Here is what each does and when to run it:
+
+| Script | Purpose | Required? | Depends On |
+|--------|---------|-----------|------------|
+| `insert_data_to_postgre_script.py` | **Main seed** — inserts 100 orgs, 20 users/warehouses/products each, inventory, sales, stock adjustments, predictions, tax config | **Yes — run first** | None, standalone |
+| `insert_sales.py` | Inserts 10 products with 30-day realistic sales trends. Use this to test AI demand forecasting. | Optional | DB schema only |
+| `insert_multi_tenancy.py` | Creates 200 users each belonging to 2–3 orgs. Tests the org-switching feature. | Optional | Main script must run first |
+
+#### Step-by-Step: Running the Main Seed Script
+
+**Step 1 — Confirm prerequisites**
+
+Before running, make sure:
+- Python 3.9+ is installed
+- PostgreSQL is running on port 5432
+- The database `InventoryDb` exists and migrations have been applied (`dotnet ef database update` from Step 3)
+
+**Step 2 — Create a virtual environment**
 
 ```bash
-python insert_data_to_postgre_script.py
+python -m venv venv
 ```
 
-> ⚠️ **Update your credentials in the script before running:**
+**Step 3 — Activate it**
+
+On Windows:
+```bash
+venv\Scripts\activate
+```
+
+On Mac/Linux:
+```bash
+source venv/bin/activate
+```
+
+**Step 4 — Install the required libraries**
+
+The main seed script only needs two packages:
+
+```bash
+pip install psycopg2-binary bcrypt
+```
+
+> Use `psycopg2-binary` not `psycopg2` — the binary version has no C compiler dependency and works out of the box.
+
+**Step 5 — Update your credentials in the script**
+
+Open `insert_data_to_postgre_script.py` and update the connection block:
 
 ```python
 conn = psycopg2.connect(
@@ -260,6 +293,42 @@ conn = psycopg2.connect(
     host="localhost",
     port="5432"
 )
+```
+
+**Step 6 — Run the script**
+
+```bash
+python insert_data_to_postgre_script.py
+```
+
+On success you will see:
+
+```
+✅ PERFECT DATA INSERTED (ALL REQUIRED FIELDS COVERED)
+```
+
+#### Common Errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `psycopg2.OperationalError` | Wrong password or DB doesn't exist | Check credentials and confirm PostgreSQL is running |
+| `UndefinedTable` | Schema not applied | Run `dotnet ef database update` first |
+| `UniqueViolation` on SKU | Script was run twice on same DB | Clear the tables or use a fresh DB |
+
+#### Running the Optional Scripts
+
+Only run these after the main seed script has completed successfully.
+
+**`insert_sales.py`** — for AI forecasting test data (standalone, no extra dependencies):
+
+```bash
+python insert_sales.py
+```
+
+**`insert_multi_tenancy.py`** — for multi-org user testing (requires main script data to exist):
+
+```bash
+python insert_multi_tenancy.py
 ```
 
 ---
@@ -273,6 +342,23 @@ ng serve
 ```
 
 ✅ Runs at: `http://localhost:4200`
+
+---
+
+## 📋 Run Order
+
+Services must be started in this order:
+
+```
+1. PostgreSQL                              → must be running before migrations
+2. dotnet ef database update               → apply schema migrations
+3. python insert_data_to_postgre_script.py → seed core dummy data
+4. python insert_sales.py                  → (optional) AI forecasting test data
+5. python insert_multi_tenancy.py          → (optional) multi-org user data
+6. AI Service                              → FastAPI on :8000
+7. Backend API                             → .NET on assigned port
+8. Frontend                                → Angular on :4200
+```
 
 ---
 
@@ -309,21 +395,6 @@ All configuration lives in `backend-dotnet/appsettings.json`. Never commit secre
 | `BootstrapAdmin:Email` | Platform Admin email (auto-seeded on first run) |
 | `BootstrapAdmin:Password` | Platform Admin password |
 | `AIService:BaseUrl` | Base URL of the FastAPI microservice |
-
----
-
-## 📋 Run Order
-
-Services must be started in this order:
-
-```
-1. PostgreSQL          → must be running before migrations
-2. dotnet ef update    → apply schema migrations
-3. seed script         → insert initial data
-4. AI Service          → FastAPI on :8000
-5. Backend API         → .NET on :xxxx
-6. Frontend            → Angular on :4200
-```
 
 ---
 
@@ -441,7 +512,8 @@ Platform Admin          Org Admin
 
 ## 🔑 Default Credentials
 
-> These are seeded automatically on first run via `BootstrapAdmin` config.
+### Platform Admin
+> Auto-seeded on first run via `BootstrapAdmin` config.
 
 | Field | Value |
 |-------|-------|
@@ -449,13 +521,22 @@ Platform Admin          Org Admin
 | Password | `Admin@123` |
 | Role | Platform Administrator |
 
-> ⚠️ Change the default password immediately in any non-local environment.
+### Dummy Seed Users
+> All users inserted by the seed scripts use this default password.
+
+| Field | Value |
+|-------|-------|
+| Password | `12345678` |
+| Email format (main script) | `user{i}_{org_id[:4]}@test.com` — e.g. `user0_a1b2@test.com` |
+| Email format (multi-tenancy script) | `multiuser{i}@test.com` — e.g. `multiuser0@test.com` |
+
+> ⚠️ These are for local development only. Never use weak passwords in any non-local environment.
 
 ---
 
 ## 🖼️ Screenshots
 
-> *Coming soon — PRs with screenshots welcome!*
+> *Coming soon*
 
 ---
 
@@ -499,6 +580,5 @@ Found a bug or have a feature request? [Open an issue](../../issues) with:
 ---
 
 <div align="center">
-
-
+Made with ❤️ — PRs welcome
 </div>
